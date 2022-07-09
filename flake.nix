@@ -7,6 +7,7 @@
     # The idea is that this lives at the top level of a flake:
     #
     # ```nix 
+    # outputs = inputs@{ liqwid-nix, ... }:
     #   (liqwid-nix.buildProject
     #     {
     #       inherit inputs;
@@ -20,6 +21,23 @@
     #     ]
     #   ).toFlake;
     # ```
+    #
+    # ### Guidelines for writing overlays
+    # 
+    # An overlay generally looks is a function like `(self: super: ...)`.
+    # Inside of it, you are able to override any attributes that have been 
+    # previously defined. In order to reuse attributes that have been provided,
+    # you can use the 'self' argument, which has the fully resolved output. However,
+    # you should be careful to not reference anything that you define in the overlay.
+    # See this blog post for more information on how to write overlays:
+    # https://blog.flyingcircus.io/2017/11/07/nixos-the-dos-and-donts-of-nixpkgs-overlays/
+    #
+    # Inside of this particular overlay system, there are a couple of expected attributes:
+    # - 'args' will be the arguments provided by caller of 'buildProject'. 
+    # - 'inputs' will be the inputs provided through 'args'.
+    # - 'toFlake' is expected to be what the flake will eventually resolve to
+    #
+    # Other attribute conventions may happen as result of using overlays.
     buildProject =
       args@
       { inputs
@@ -55,6 +73,9 @@
         # laziness, we get to do this trick, and each of
         # the overlays individually get access to the
         # eventual result.
+        #
+        # For further reading on this, see this blog post:
+        # https://blog.layus.be/posts/2020-06-12-nix-overlays.html
         resolved =
           builtins.foldl'
             (super: overlay: super // overlay resolved super
@@ -65,10 +86,16 @@
       resolved;
 
 
-    # Haskell project overlay
-    #
-    # This provides a number of things including
+    # Haskell project overlay.
     # 
+    # Use this in order to create haskell projects using cabal.
+    # Keep in mind, a number of inputs will need to be provided, including:
+    # - haskell-nix-extra-hackage
+    # - iohk-nix
+    # - haskell-nix
+    # - nixpkgs
+    # - haskell-language-server
+    # - nixpkgs-latest, which is a *later* version of nixpkgs.
     haskellProject =
       self:
       super:
@@ -212,11 +239,28 @@
 
         projectFor = self.projectForGhc self.ghcVersion;
 
+        formatCheckFor = system:
+          let
+            pkgs' = pkgsFor' system;
+          in
+          pkgs'.runCommand "format-check"
+            {
+              nativeBuildInputs = [ pkgs'.haskellPackages.cabal-fmt pkgs'.nixpkgs-fmt (self.fourmoluFor system) pkgs'.hlint ];
+            } ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+            cd ${inputs.self}
+            make format_check || (echo "    Please run 'make format'" ; exit 1)
+            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint
+            mkdir $out
+          '';
+
         toFlake =
           let
             inherit (self) perSystem projectFor;
           in
-          rec {
+          (super.toFlake or { }) // rec {
             project = perSystem projectFor;
             flake = perSystem (system: (projectFor system).flake { });
 
@@ -293,22 +337,6 @@
           "${inputs.plutarch.inputs.plutus}/plutus-tx-plugin" # necessary for FFI tests
         ];
 
-        formatCheckFor = system:
-          let
-            pkgs' = pkgsFor' system;
-          in
-          pkgs'.runCommand "format-check"
-            {
-              nativeBuildInputs = [ pkgs'.haskellPackages.cabal-fmt pkgs'.nixpkgs-fmt (self.fourmoluFor system) pkgs'.hlint ];
-            } ''
-            export LC_CTYPE=C.UTF-8
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
-            cd ${inputs.self}
-            make format_check || (echo "    Please run 'make format'" ; exit 1)
-            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint
-            mkdir $out
-          '';
       };
 
     # For developing _this repository_, having nixpkgs-fmt available is convenient.
