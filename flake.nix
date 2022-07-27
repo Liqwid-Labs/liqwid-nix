@@ -24,7 +24,7 @@
     #
     # ### Guidelines for writing overlays
     # 
-    # An overlay generally looks is a function like `(self: super: ...)`.
+    # An overlay is a function like `(self: super: ...)`.
     # Inside of it, you are able to override any attributes that have been 
     # previously defined. In order to reuse attributes that have been provided,
     # you can use the 'self' argument, which has the fully resolved output. However,
@@ -33,7 +33,7 @@
     # https://blog.flyingcircus.io/2017/11/07/nixos-the-dos-and-donts-of-nixpkgs-overlays/
     #
     # Inside of this particular overlay system, there are a couple of expected attributes:
-    # - 'args' will be the arguments provided by caller of 'buildProject'. 
+    # - 'args' will be the arguments provided by the caller of 'buildProject'. 
     # - 'inputs' will be the inputs provided through 'args'.
     # - 'toFlake' is expected to be what the flake will eventually resolve to
     #
@@ -68,7 +68,7 @@
         ];
 
         # This is the overlay fixpoint pattern:
-        # "res" here, is "self", or the fully resolved 
+        # "resolved" here, is "self", or the fully resolved 
         # output of applying all the overlays. Due to
         # laziness, we get to do this trick, and each of
         # the overlays individually get access to the
