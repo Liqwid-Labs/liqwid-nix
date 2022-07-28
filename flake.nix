@@ -71,7 +71,7 @@
         # "resolved" here, is "self", or the fully resolved 
         # output of applying all the overlays. Due to
         # laziness, we get to do this trick, and each of
-        # the overlays individually get access to the
+        # the overlays individually gets access to the
         # eventual result.
         #
         # For further reading on this, see this blog post:
