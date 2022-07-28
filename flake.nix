@@ -205,19 +205,19 @@
           else
             (self.hlsFor' compiler-nix-name pkgs).hsPkgs.haskell-language-server.components.exes.haskell-language-server;
 
-        commandLineTools = compiler-nix-name: system:
+        commandLineTools = system:
           let
             pkgs = pkgsFor system;
             pkgs' = pkgsFor' system;
-            sup = super.commandLineTools or (compiler-nix-name: system: [ ]);
+            sup = super.commandLineTools or (system: [ ]);
           in
-          (sup compiler-nix-name system) ++ [
+          (sup system) ++ [
             pkgs'.cabal-install
             pkgs'.hlint
             pkgs'.haskellPackages.cabal-fmt
             (self.fourmoluFor system)
             pkgs'.nixpkgs-fmt
-            (self.hlsFor compiler-nix-name system)
+            (self.hlsFor self.ghcVersion system)
             pkgs'.fd
             pkgs'.entr
             pkgs'.haskellPackages.apply-refact
@@ -234,7 +234,7 @@
               shell = {
                 withHoogle = true;
                 exactDeps = true;
-                nativeBuildInputs = self.commandLineTools compiler-nix-name system;
+                nativeBuildInputs = self.commandLineTools system;
               };
             });
           in
@@ -287,13 +287,13 @@
 
 
     addCommandLineTools = addF: self: super: {
-      commandLineTools = compiler-nix-name: system:
+      commandLineTools = system:
         let
           pkgs = self.pkgsFor system;
           pkgs' = self.pkgsFor' system;
-          sup = super.commandLineTools or (compiler-nix-name: system: [ ]);
+          sup = super.commandLineTools or (system: [ ]);
         in
-        sup ++ (addF pkgs pkgs' compiler-nix-name);
+        sup ++ (addF pkgs pkgs');
     };
 
     # Add input-based dependencies to hackage deps
