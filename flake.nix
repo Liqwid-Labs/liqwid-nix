@@ -223,6 +223,9 @@
                   (self.fourmoluFor system)
                   pkgs'.nixpkgs-fmt
                   (self.hlsFor compiler-nix-name system)
+                  pkgs'.fd
+                  pkgs'.entr
+                  pkgs'.haskellPackages.apply-refact
                 ];
               };
             });
