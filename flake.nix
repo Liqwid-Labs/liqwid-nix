@@ -205,10 +205,28 @@
           else
             (self.hlsFor' compiler-nix-name pkgs).hsPkgs.haskell-language-server.components.exes.haskell-language-server;
 
-        projectForGhc = compiler-nix-name: system:
-          let pkgs = pkgsFor system; in
-          let pkgs' = pkgsFor' system; in
+        commandLineTools = compiler-nix-name: system:
           let
+            pkgs = pkgsFor system;
+            pkgs' = pkgsFor' system;
+            sup = super.commandLineTools or (compiler-nix-name: system: [ ]);
+          in
+          (sup compiler-nix-name system) ++ [
+            pkgs'.cabal-install
+            pkgs'.hlint
+            pkgs'.haskellPackages.cabal-fmt
+            (self.fourmoluFor system)
+            pkgs'.nixpkgs-fmt
+            (self.hlsFor compiler-nix-name system)
+            pkgs'.fd
+            pkgs'.entr
+            pkgs'.haskellPackages.apply-refact
+          ];
+
+        projectForGhc = compiler-nix-name: system:
+          let
+            pkgs = pkgsFor system;
+            pkgs' = pkgsFor' system;
             pkgSet = pkgs.haskell-nix.cabalProject' (self.applyDep pkgs {
               src = self.args.src;
               inherit compiler-nix-name;
@@ -216,17 +234,7 @@
               shell = {
                 withHoogle = true;
                 exactDeps = true;
-                nativeBuildInputs = [
-                  pkgs'.cabal-install
-                  pkgs'.hlint
-                  pkgs'.haskellPackages.cabal-fmt
-                  (self.fourmoluFor system)
-                  pkgs'.nixpkgs-fmt
-                  (self.hlsFor compiler-nix-name system)
-                  pkgs'.fd
-                  pkgs'.entr
-                  pkgs'.haskellPackages.apply-refact
-                ];
+                nativeBuildInputs = self.commandLineTools compiler-nix-name system;
               };
             });
           in
@@ -278,6 +286,15 @@
       };
 
 
+    addCommandLineTools = addF: self: super: {
+      commandLineTools = compiler-nix-name: system:
+        let
+          pkgs = self.pkgsFor system;
+          pkgs' = self.pkgsFor' system;
+          sup = super.commandLineTools or (compiler-nix-name: system: [ ]);
+        in
+        sup ++ (addF pkgs pkgs' compiler-nix-name);
+    };
 
     # Add input-based dependencies to hackage deps
     addDependencies = addedDependencies:
@@ -536,9 +553,10 @@
 
     # For developing _this repository_, having nixpkgs-fmt available is convenient.
     devShell = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system:
-      let pkgs = import nixpkgs {
-        inherit system;
-      };
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+        };
       in
       pkgs.mkShell {
         name = "shell";
