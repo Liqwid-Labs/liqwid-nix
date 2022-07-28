@@ -49,6 +49,18 @@ Some things to note:
 - The second argument of `buildProject` has two overlays applied, `haskellProject` and `plutarchProject`. These are overlays which make this actually create a plutarch project. Both are required. You can also pass your own overlays.
 - We extract `.toFlake` from the output of `buildProject` because the convention is that all overlays must preserve an eventual `toFlake` attribute that represents the resulting flake. 
 
+## Which inputs do we need to provide?
+
+For haskell projects, you need to provide:
+- `nixpkgs-latest`, which should be a relatively up to date revision of nixpkgs. Example url: `github:NixOS/nixpkgs?rev=a0a69be4b5ee63f1b5e75887a406e9194012b492`.
+- `haskell-nix-extra-hackage`, which allows us to create our own hackages.
+- `haskell-nix`, which allows us to actually build cabal files. Example url: `github:input-output-hk/haskell.nix`.
+- `nixpkgs`, which should follow `haskell-nix`: `inputs.nixpkgs.follows = "haskell-nix/nixpkgs-unstable";`
+- `iohk-nix`. Example url: `github:input-output-hk/iohk-nix`.
+- `haskell-language-server`. Example url: `github:haskell/haskell-language-server`.
+
+See [the nixos wiki on Flakes](https://nixos.wiki/wiki/Flakes) for more information on how inputs work.
+
 ## Writing your own overlays
 
 In the _ideally_ rare (but in practice quite common) event where you need to change something about the way the project is built, you can apply an _overlay_ on top of the other ones. 
@@ -72,7 +84,7 @@ Let's say you want to add a new custom input to the hackage. We can do this usin
 (self: super: {
   hackageDeps = (super.hackageDeps or []) ++ [
     "${inputs.my-package}"
-  ]
+  ];
 })
 ```
 
