@@ -226,11 +226,13 @@
         projectFor = self.projectForGhc self.ghcVersion;
 
         toFlake = let inherit (self) perSystem projectFor;
-        in (super.toFlake or { }) // rec {
+        in (super.toFlake or { }) // {
           project = perSystem projectFor;
+
           flake = perSystem (system: (projectFor system).flake { });
 
-          packages = perSystem (system: flake.${system}.packages // { });
+          packages =
+            perSystem (system: self.toFlake.flake.${system}.packages // { });
 
           checks = perSystem (system: self.toFlake.flake.${system}.checks);
 
