@@ -43,7 +43,17 @@ If you want to build a plutarch project using cabal and nix, here is a simple ex
               project_builds = "awesome-project:exe:awesome-project-app";
               project_testsuite = "awesome-project:test:awesome-project-spec";
             };
-            format = true; # This requires a Makefile entry "format_check"
+            format = {
+              enable = true;
+              exts = [
+                "-XQuasiQuotes"
+                "-XTemplateHaskell"
+                "-XTypeApplications"
+                "-XImportQualifiedPost"
+                "-XPatternSynonyms"
+                "-XOverloadedRecordDot"
+              ];
+            };			
           })
       ]
     ).toFlake;

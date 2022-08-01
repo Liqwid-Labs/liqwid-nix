@@ -225,8 +225,9 @@
 
         projectFor = self.projectForGhc self.ghcVersion;
 
-        formatCheckFor = system:
+        formatCheckFor = system: exts:
           let pkgs' = pkgsFor' system;
+              extsStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
           in pkgs'.runCommand "format-check" {
             nativeBuildInputs = [
               pkgs'.haskellPackages.cabal-fmt
@@ -238,8 +239,16 @@
             export LC_CTYPE=C.UTF-8
             export LC_ALL=C.UTF-8
             export LANG=C.UTF-8
+
+            function check {
+            	find -name '*.hs' \
+              	   -not -path './dist*/*' \
+                   -not -path './haddock/*' \
+             	  | xargs fourmolu ${extsStr} -m check
+            }
+
             cd ${inputs.self}
-            make format_check || (echo "    Please run 'make format'" ; exit 1)
+            check || (echo "    Please format Haskell files" ; exit 1)
             find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint
             mkdir $out
           '';
@@ -259,8 +268,8 @@
               checks = builtins.mapAttrs
                 (name: value: self.toFlake.flake.${system}.packages.${value})
                 self.specDefinition.checks or { };
-              format = if self.specDefinition.format or false == true then {
-                formatCheck = self.formatCheckFor system;
+              format = if self.specDefinition.format.enable or false then {
+                formatCheck = self.formatCheckFor system self.specDefinition.format.exts;
               } else
                 { };
             in self.toFlake.flake.${system}.checks // checks // format);
