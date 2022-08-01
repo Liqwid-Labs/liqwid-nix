@@ -95,8 +95,8 @@
         inherit (self)
           inputs nixpkgs nixpkgs-latest haskell-nix pkgsFor pkgsFor';
       in {
-        fourmoluFor = system:
-          (pkgsFor' system).haskell.packages.ghc922.fourmolu_0_6_0_0;
+        fourmoluFor = pkgs:
+          pkgs.haskell.packages.ghc922.fourmolu_0_6_0_0;
 
         nonReinstallablePkgs = [
           "array"
@@ -199,7 +199,7 @@
             pkgs'.cabal-install
             pkgs'.hlint
             pkgs'.haskellPackages.cabal-fmt
-            (self.fourmoluFor system)
+            (self.fourmoluFor pkgs')
             pkgs'.nixpkgs-fmt
             (self.hlsFor self.ghcVersion system)
             pkgs'.fd
@@ -274,122 +274,60 @@
       };
     };
 
-    enableFormatCheck = exts: self: super: {
+    defExternalCheck = name: package: exec: self: super: {
       toFlake = let
         inherit (self) inputs perSystem pkgsFor';
-        formatCheckFor = system: exts:
-          let
-            pkgs' = pkgsFor' system;
-            extsStr =
-              builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
-          in pkgs'.runCommand "format-check" {
-            nativeBuildInputs = [ self.fourmoluFor system ];
-          } ''
-            export LC_CTYPE=C.UTF-8
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
+        flake = super.toFlake or { };          
+      in flake // {
+        checks = perSystem (system:
+          flake.checks.${system} // {
+            ${name} =
+              let pkgs' = pkgsFor' system;
+              in pkgs'.runCommand name {
+                nativeBuildInputs = [ (package pkgs') ];
+              } ''
+                   export LC_CTYPE=C.UTF-8
+                   export LC_ALL=C.UTF-8
+                   export LANG=C.UTF-8
+                   cd ${inputs.self}
+                   ${exec}
+                   mkdir $out
+              '';              
+          });
+      };
+    };
 
-            function check {
+    enableFormatCheck = exts: self:
+      let
+        extStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
+      in
+        defExternalCheck "formatCheck" (p: self.fourmoluFor p) ''
             	find -name '*.hs' \
               	   -not -path './dist*/*' \
                    -not -path './haddock/*' \
-             	  | xargs fourmolu ${extsStr} -m check
-            }
+             	  | xargs fourmolu ${extStr} -m check
+        ''
+        self;
+    
+    enableLintCheck =
+      defExternalCheck "lintCheck" (p: [ p.hlint ]) ''
+          find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
+      '';
 
-            cd ${inputs.self}
-            check || (echo "    Please format Haskell files" ; exit 1)
-            mkdir $out
-          '';
+    enableCabalFormatCheck =
+      defExternalCheck "cabalFormatCheck" (p: [ p.haskellPackages.cabal-fmt ]) ''
+          find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
+      '';
 
-        flake = super.toFlake or { };
-      in flake // {
-        checks = perSystem (system:
-          flake.checks.${system} // {
-            formatCheck = formatCheckFor system exts;
-          });
-      };
-    };
-
-    enableLintCheck = self: super:  {
-      toFlake = let
-        inherit (self) inputs perSystem pkgsFor';
-        lintCheckFor = system:
-          let pkgs' = pkgsFor' system;
-          in pkgs'.runCommand "lint-check" {
-            nativeBuildInputs = [ pkgs'.hlint ];
-          } ''
-            export LC_CTYPE=C.UTF-8
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
-
-            cd ${inputs.self}
-            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
-            mkdir $out
-          '';
-
-        flake = super.toFlake or { };
-      in flake // {
-        checks = perSystem (system:
-          flake.checks.${system} // {
-            lintCheck = lintCheckFor system;
-          });
-      };
-    };
-
-    enableCabalFormatCheck = self: super: {
-      toFlake = let
-        inherit (self) inputs perSystem pkgsFor';
-        cabalFormatFor = system:
-          let pkgs' = pkgsFor' system;
-          in pkgs'.runCommand "format-check" {
-            nativeBuildInputs = [ pkgs'.haskellPackages.cabal-fmt ];
-          } ''
-            export LC_CTYPE=C.UTF-8
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
-
-            cd ${inputs.self}
-            find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
-            mkdir $out
-          '';
-        flake = super.toFlake or { };
-      in flake // {
-        checks = perSystem (system:
-          flake.checks.${system} // {
-            cabalFormatCheck = cabalFormatFor system;
-          });
-      };
-    };
-
-    enableNixFormatCheck = self: super: {
-      toFlake = let
-        inherit (self) inputs perSystem pkgsFor';
-        nixFormatFor = system:
-          let pkgs' = pkgsFor' system;
-          in pkgs'.runCommand "format-check" {
-            nativeBuildInputs = [ pkgs'.nixpkgs-fmt ];
-          } ''
-            export LC_CTYPE=C.UTF-8
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
-
-            cd ${inputs.self}
-            find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
-            mkdir $out
-          '';
-        flake = super.toFlake or { };
-      in flake // {
-        checks = perSystem (system:
-          flake.checks.${system} // {
-            nixFormatCheck = nixFormatFor system;
-          });
-      };
-    };
+    enableNixFormatCheck =
+      defExternalCheck "nixFormatCheck" (p: [ p.nixpkgs-fmt ]) ''
+          find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
+      '';      
 
     # Plutarch project overlay.
     plutarchProject = self: super:
       let
-        inherit (self) inputs pkgsFor pkgsFor' fourmoluFor;
+        inherit (self) inputs pkgsFor pkgsFor';
         inherit (inputs) nixpkgs nixpkgs-latest haskell-nix plutarch;
       in {
         haskellModules = (super.haskellModules or [ ]) ++ [
