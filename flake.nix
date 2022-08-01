@@ -274,7 +274,6 @@
       };
     };
 
-    # Enable format check
     enableFormatCheck = exts: self: super: {
       toFlake = let
         inherit (self) inputs perSystem pkgsFor';
@@ -284,12 +283,7 @@
             extsStr =
               builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
           in pkgs'.runCommand "format-check" {
-            nativeBuildInputs = [
-              pkgs'.haskellPackages.cabal-fmt
-              pkgs'.nixpkgs-fmt
-              (self.fourmoluFor system)
-              pkgs'.hlint
-            ];
+            nativeBuildInputs = [ self.fourmoluFor system ];
           } ''
             export LC_CTYPE=C.UTF-8
             export LC_ALL=C.UTF-8
@@ -304,7 +298,6 @@
 
             cd ${inputs.self}
             check || (echo "    Please format Haskell files" ; exit 1)
-            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint
             mkdir $out
           '';
 
@@ -313,6 +306,82 @@
         checks = perSystem (system:
           flake.checks.${system} // {
             formatCheck = formatCheckFor system exts;
+          });
+      };
+    };
+
+    enableLintCheck = self: super:  {
+      toFlake = let
+        inherit (self) inputs perSystem pkgsFor';
+        lintCheckFor = system:
+          let pkgs' = pkgsFor' system;
+          in pkgs'.runCommand "lint-check" {
+            nativeBuildInputs = [ pkgs'.hlint ];
+          } ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+
+            cd ${inputs.self}
+            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
+            mkdir $out
+          '';
+
+        flake = super.toFlake or { };
+      in flake // {
+        checks = perSystem (system:
+          flake.checks.${system} // {
+            lintCheck = lintCheckFor system;
+          });
+      };
+    };
+
+    enableCabalFormatCheck = self: super: {
+      toFlake = let
+        inherit (self) inputs perSystem pkgsFor';
+        cabalFormatFor = system:
+          let pkgs' = pkgsFor' system;
+          in pkgs'.runCommand "format-check" {
+            nativeBuildInputs = [ pkgs'.haskellPackages.cabal-fmt ];
+          } ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+
+            cd ${inputs.self}
+            find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
+            mkdir $out
+          '';
+        flake = super.toFlake or { };
+      in flake // {
+        checks = perSystem (system:
+          flake.checks.${system} // {
+            cabalFormatCheck = cabalFormatFor system;
+          });
+      };
+    };
+
+    enableNixFormatCheck = self: super: {
+      toFlake = let
+        inherit (self) inputs perSystem pkgsFor';
+        nixFormatFor = system:
+          let pkgs' = pkgsFor' system;
+          in pkgs'.runCommand "format-check" {
+            nativeBuildInputs = [ pkgs'.nixpkgs-fmt ];
+          } ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+
+            cd ${inputs.self}
+            find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
+            mkdir $out
+          '';
+        flake = super.toFlake or { };
+      in flake // {
+        checks = perSystem (system:
+          flake.checks.${system} // {
+            nixFormatCheck = nixFormatFor system;
           });
       };
     };
