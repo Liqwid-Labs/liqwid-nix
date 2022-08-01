@@ -37,6 +37,14 @@ If you want to build a plutarch project using cabal and nix, here is a simple ex
       [
         liqwid-nix.haskellProject
         liqwid-nix.plutarchProject
+        (liqwid-nix.addChecks
+          {
+            checks = {
+              project_builds = "awesome-project:exe:awesome-project-app";
+              project_testsuite = "awesome-project:test:awesome-project-spec";
+            };
+            format = true; # This requires a Makefile entry "format_check"
+          })
       ]
     ).toFlake;
 
