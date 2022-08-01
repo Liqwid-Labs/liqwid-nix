@@ -225,36 +225,6 @@
 
         projectFor = self.projectForGhc self.ghcVersion;
 
-        formatCheckFor = system: exts:
-          let pkgs' = pkgsFor' system;
-              extsStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
-          in pkgs'.runCommand "format-check" {
-            nativeBuildInputs = [
-              pkgs'.haskellPackages.cabal-fmt
-              pkgs'.nixpkgs-fmt
-              (self.fourmoluFor system)
-              pkgs'.hlint
-            ];
-          } ''
-            export LC_CTYPE=C.UTF-8
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
-
-            function check {
-            	find -name '*.hs' \
-              	   -not -path './dist*/*' \
-                   -not -path './haddock/*' \
-             	  | xargs fourmolu ${extsStr} -m check
-            }
-
-            cd ${inputs.self}
-            check || (echo "    Please format Haskell files" ; exit 1)
-            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint
-            mkdir $out
-          '';
-
-        specDefinition = super.specDefinition or { };
-
         toFlake = let inherit (self) perSystem projectFor;
         in (super.toFlake or { }) // rec {
           project = perSystem projectFor;
@@ -262,17 +232,7 @@
 
           packages = perSystem (system: flake.${system}.packages // { });
 
-          # Define what we want to test
-          checks = perSystem (system:
-            let
-              checks = builtins.mapAttrs
-                (name: value: self.toFlake.flake.${system}.packages.${value})
-                self.specDefinition.checks or { };
-              format = if self.specDefinition.format.enable or false then {
-                formatCheck = self.formatCheckFor system self.specDefinition.format.exts;
-              } else
-                { };
-            in self.toFlake.flake.${system}.checks // checks // format);
+          checks = perSystem (system: self.toFlake.flake.${system}.checks);
 
           check = perSystem (system:
             (pkgsFor system).runCommand "combined-test" {
@@ -301,7 +261,58 @@
 
     # Define tests for Haskell project.
     addChecks = checks: self: super: {
-      specDefinition = super.specDefinition or { } // checks;
+      toFlake = let
+        inherit (self) perSystem;
+        flake = super.toFlake or { };
+        c = system:
+          builtins.mapAttrs
+          (name: value: self.toFlake.flake.${system}.packages.${value}) checks;
+      in flake // {
+        checks = perSystem (system: flake.checks.${system} // c system);
+      };
+    };
+
+    # Enable format check
+    enableFormatCheck = exts: self: super: {
+      toFlake = let
+        inherit (self) inputs perSystem pkgsFor';
+        formatCheckFor = system: exts:
+          let
+            pkgs' = pkgsFor' system;
+            extsStr =
+              builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
+          in pkgs'.runCommand "format-check" {
+            nativeBuildInputs = [
+              pkgs'.haskellPackages.cabal-fmt
+              pkgs'.nixpkgs-fmt
+              (self.fourmoluFor system)
+              pkgs'.hlint
+            ];
+          } ''
+            export LC_CTYPE=C.UTF-8
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+
+            function check {
+            	find -name '*.hs' \
+              	   -not -path './dist*/*' \
+                   -not -path './haddock/*' \
+             	  | xargs fourmolu ${extsStr} -m check
+            }
+
+            cd ${inputs.self}
+            check || (echo "    Please format Haskell files" ; exit 1)
+            find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint
+            mkdir $out
+          '';
+
+        flake = super.toFlake or { };
+      in flake // {
+        checks = perSystem (system:
+          flake.checks.${system} // {
+            formatCheck = formatCheckFor system exts;
+          });
+      };
     };
 
     # Plutarch project overlay.
