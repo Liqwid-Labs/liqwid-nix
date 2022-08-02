@@ -252,8 +252,8 @@
         let
           pkgs = self.pkgsFor system;
           pkgs' = self.pkgsFor' system;
-          sup = super.commandLineTools or (system: [ ]);
-        in sup ++ (addF pkgs pkgs');
+          sup = super.commandLineTools or (_: [ ]);
+        in (sup system) ++ (addF pkgs pkgs');
     };
 
     # Add input-based dependencies to hackage deps
