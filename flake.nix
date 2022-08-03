@@ -88,15 +88,16 @@
     # - iohk-nix
     # - haskell-nix
     # - nixpkgs
-    # - haskell-language-server
+    # - nixpkgs-2205
     # - nixpkgs-latest, which is a *later* version of nixpkgs.
+    # - haskell-language-server
     haskellProject = self: super:
       let
         inherit (self)
           inputs nixpkgs nixpkgs-latest haskell-nix pkgsFor pkgsFor';
       in {
         fourmoluFor = pkgs:
-          pkgs.haskell.packages.ghc922.fourmolu_0_6_0_0;
+          pkgs.haskell.packages.${self.ghcVersion}.fourmolu_0_6_0_0;
 
         nonReinstallablePkgs = [
           "array"
@@ -167,6 +168,8 @@
           (import "${inputs.iohk-nix}/overlays/crypto")
         ];
 
+        nixpkgsStableFor = system: import inputs.nixpkgs-2205 {inherit system;};
+
         hlsFor' = compiler-nix-name: pkgs:
           pkgs.haskell-nix.cabalProject' {
             modules = [{
@@ -194,17 +197,19 @@
           let
             pkgs = pkgsFor system;
             pkgs' = pkgsFor' system;
+            haskellPackages922 = (self.nixpkgsStableFor system).haskell.packages.ghc922;
+            haskellPackages923 = pkgs'.haskell.packages.ghc923;
             sup = super.commandLineTools or (system: [ ]);
           in (sup system) ++ [
             pkgs'.cabal-install
-            pkgs'.hlint
+            haskellPackages923.hlint
             pkgs'.haskellPackages.cabal-fmt
             (self.fourmoluFor pkgs')
             pkgs'.nixpkgs-fmt
             (self.hlsFor self.ghcVersion system)
             pkgs'.fd
             pkgs'.entr
-            pkgs'.haskellPackages.apply-refact
+            haskellPackages922.apply-refact_0_10_0_0
           ];
 
         projectForGhc = compiler-nix-name: system:
@@ -297,28 +302,46 @@
       };
     };
 
+
+    # Enables running fourmolu on `*.hs` files.
+    # Specify the extensions in the first argument.
+    #
+    # Example:
+    # ```
+    #   (liqwid-nix.enableFormatCheck [
+    #     "-XTemplateHaskell"
+    #     "-XOverloadedRecordDot"
+    #     "-XTypeApplications"
+    #     "-XPatternSynonyms"
+    #     "-XNoFieldSelectors"
+    #     "-XImportQualifiedPost"
+    #   ])
+    # ```
     enableFormatCheck = exts: self:
       let
         extStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
       in
         defExternalCheck "formatCheck" (p: self.fourmoluFor p) ''
-            	find -name '*.hs' \
-              	   -not -path './dist*/*' \
-                   -not -path './haddock/*' \
-             	  | xargs fourmolu ${extStr} -m check
+          find -name '*.hs' \
+            -not -path './dist*/*' \
+            -not -path './haddock/*' \
+            | xargs fourmolu ${extStr} -m check
         ''
         self;
-    
+
+    # Enables running hlint on `*.hs` files.
     enableLintCheck =
       defExternalCheck "lintCheck" (p: [ p.hlint ]) ''
           find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
       '';
 
+    # Enables running cabal-fmt on `*.cabal` files.
     enableCabalFormatCheck =
       defExternalCheck "cabalFormatCheck" (p: [ p.haskellPackages.cabal-fmt ]) ''
           find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
       '';
 
+    # Enables running nixpkgs-fmt on `*.nix` files.
     enableNixFormatCheck =
       defExternalCheck "nixFormatCheck" (p: [ p.nixpkgs-fmt ]) ''
           find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
