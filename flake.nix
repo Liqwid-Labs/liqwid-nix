@@ -307,7 +307,7 @@
         };
       };
 
-    defExternalCheck = name: package: exec: self: super: {
+    addShellCheck = name: package: exec: self: super: {
       toFlake =
         let
           inherit (self) inputs perSystem pkgsFor';
@@ -353,7 +353,7 @@
       let
         extStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
       in
-      defExternalCheck "formatCheck" (p: self.fourmoluFor p) ''
+      addShellCheck "formatCheck" (p: self.fourmoluFor p) ''
         find -name '*.hs' \
           -not -path './dist*/*' \
           -not -path './haddock/*' \
@@ -363,19 +363,19 @@
 
     # Enables running hlint on `*.hs` files.
     enableLintCheck =
-      defExternalCheck "lintCheck" (p: [ p.hlint ]) ''
+      addShellCheck "lintCheck" (p: [ p.hlint ]) ''
         find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
       '';
 
     # Enables running cabal-fmt on `*.cabal` files.
     enableCabalFormatCheck =
-      defExternalCheck "cabalFormatCheck" (p: [ p.haskellPackages.cabal-fmt ]) ''
+      addShellCheck "cabalFormatCheck" (p: [ p.haskellPackages.cabal-fmt ]) ''
         find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
       '';
 
     # Enables running nixpkgs-fmt on `*.nix` files.
     enableNixFormatCheck =
-      defExternalCheck "nixFormatCheck" (p: [ p.nixpkgs-fmt ]) ''
+      addShellCheck "nixFormatCheck" (p: [ p.nixpkgs-fmt ]) ''
         find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
       '';
 
