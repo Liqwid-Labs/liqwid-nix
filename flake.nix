@@ -229,7 +229,9 @@
             pkgSet = pkgs.haskell-nix.cabalProject' (self.applyDep pkgs {
               src = self.args.src;
               inherit compiler-nix-name;
-              modules = [ ];
+              modules = [{
+                enableLibraryProfiling = true;
+              }];
               shell = {
                 withHoogle = true;
                 exactDeps = true;
