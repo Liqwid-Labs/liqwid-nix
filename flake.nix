@@ -1,7 +1,18 @@
 {
   description = "Nix tools for building Liqwid projects";
 
-  outputs = { self, nixpkgs }: rec {
+  # Inputs
+  # 
+  # We should aim to have as few inputs here as possible, as
+  # the way liqwid-nix is set up is more conducive to having
+  # callers pass their own inputs through the arguments.
+  #
+  # For nixpkgs, however, where we are undoubtedly depending
+  # on a specific release, we can have those here, in the
+  # naming format of `nixpkgs-<version>`.
+  inputs.nixpkgs-2205.url = "github:NixOS/nixpkgs/nixos-22.05";
+
+  outputs = { self, nixpkgs-2205, nixpkgs }: rec {
     # Build a project given overlays.
     #
     # The idea is that this lives at the top level of a flake:
@@ -66,6 +77,8 @@
               };
             pkgsFor' = system:
               import self.inputs.nixpkgs-latest { inherit system; };
+
+            nixpkgs2205for = system: import nixpkgs-2205 { inherit system; };
           })
         ];
 
@@ -102,7 +115,7 @@
       in
       {
         fourmoluFor = pkgs:
-          pkgs.haskell.packages.${self.ghcVersion}.fourmolu_0_6_0_0;
+          pkgs.haskell.packages.ghc923.fourmolu_0_6_0_0;
 
         nonReinstallablePkgs = [
           "array"
@@ -175,7 +188,6 @@
           (import "${inputs.iohk-nix}/overlays/crypto")
         ];
 
-        nixpkgsStableFor = system: import inputs.nixpkgs-2205 { inherit system; };
 
         hlsFor' = compiler-nix-name: pkgs:
           pkgs.haskell-nix.cabalProject' {
@@ -206,15 +218,16 @@
           let
             pkgs = pkgsFor system;
             pkgs' = pkgsFor' system;
-            haskellPackages922 = (self.nixpkgsStableFor system).haskell.packages.ghc922;
-            haskellPackages923 = pkgs'.haskell.packages.ghc923;
+            nixpkgs2205 = self.nixpkgs2205for system;
+            haskellPackages922 = nixpkgs2205.haskell.packages.ghc922;
+            haskellPackages923 = nixpkgs2205.haskell.packages.ghc923;
             sup = super.commandLineTools or (system: [ ]);
           in
           (sup system) ++ [
             pkgs'.cabal-install
             haskellPackages923.hlint
             pkgs'.haskellPackages.cabal-fmt
-            (self.fourmoluFor pkgs')
+            (self.fourmoluFor nixpkgs2205)
             pkgs'.nixpkgs-fmt
             (self.hlsFor self.ghcVersion system)
             pkgs'.fd
