@@ -311,12 +311,20 @@
     };
 
     # Add all packages to checks, as a result, running `nix build .#check.${system}`
-    # will be a superset of `nix build`.
+    # will be a superset of `nix build`. Prefixing "build:" to package name to 
+    # avoid overwriting the existing checks.
     addBuildChecks = self: super:
-      let flake = (super.toFlake or { }); in
+      let
+        inherit (self) perSystem pkgsFor';
+        flake = (super.toFlake or { });
+        prefixPackages = system: (pkgsFor' system).lib.mapAttrs'
+          (name: value: { name = "build:" + name; inherit value; });
+      in
       {
         toFlake = flake // {
-          checks = self.perSystem (system: flake.checks.${system} // flake.packages.${system});
+          checks = self.perSystem (system:
+            (prefixPackages system flake.packages.${system}) //
+              flake.checks.${system});
         };
       };
 
