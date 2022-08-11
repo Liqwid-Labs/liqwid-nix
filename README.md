@@ -37,6 +37,11 @@ If you want to build a plutarch project using cabal and nix, here is a simple ex
       [
         liqwid-nix.haskellProject
         liqwid-nix.plutarchProject
+        # `addBuildChecks` essentially ensures `cabal build` works
+        liqwid-nix.addBuildChecks
+        # Executables or benchmarks suites can be added here. They won't be run,
+        # but they will be built. The default `haskell.nix` behavior builds and runs 
+        # all test libraries automatically, so these do not have to be incldued.
         (liqwid-nix.addChecks
           {
             liqwid-nix-test = "liqwid-nix-test:exe:liqwid-nix-test";
