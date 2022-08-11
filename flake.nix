@@ -294,22 +294,6 @@
       hackageDeps = (super.hackageDeps or [ ]) ++ addedDependencies;
     };
 
-    # Define tests for Haskell project.
-    addChecks = checks: self: super: {
-      toFlake =
-        let
-          inherit (self) perSystem;
-          flake = super.toFlake or { };
-          c = system:
-            builtins.mapAttrs
-              (name: value: self.toFlake.flake.${system}.packages.${value})
-              checks;
-        in
-        flake // {
-          checks = perSystem (system: flake.checks.${system} // c system);
-        };
-    };
-
     # Add all packages to checks, as a result, running `nix build .#check.${system}`
     # will be a superset of `nix build`. Prefixing "build:" to package name to 
     # avoid overwriting the existing checks.
