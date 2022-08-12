@@ -114,8 +114,16 @@
           inputs nixpkgs nixpkgs-latest haskell-nix pkgsFor pkgsFor';
       in
       {
-        fourmoluFor = pkgs:
-          pkgs.haskell.packages.ghc923.fourmolu_0_6_0_0;
+        fourmoluFor = system:
+          (self.nixpkgs2205for system).haskell.packages.ghc923.fourmolu_0_6_0_0;
+        applyRefactFor = system:
+          (self.nixpkgs2205for system).haskell.packages.ghc922.apply-refact_0_10_0_0;
+        hlintFor = system:
+          (self.nixpkgs2205for system).haskell.packages.ghc923.hlint;
+        nixpkgsFmtFor = system:
+          (self.nixpkgs2205for system).nixpkgs-fmt;
+        cabalFmtFor = system:
+          (self.pkgsFor' system).haskellPackages.cabal-fmt;
 
         nonReinstallablePkgs = [
           "array"
@@ -214,25 +222,22 @@
             (self.hlsFor' compiler-nix-name
               pkgs).hsPkgs.haskell-language-server.components.exes.haskell-language-server;
 
+
         commandLineTools = system:
           let
-            pkgs = pkgsFor system;
             pkgs' = pkgsFor' system;
-            nixpkgs2205 = self.nixpkgs2205for system;
-            haskellPackages922 = nixpkgs2205.haskell.packages.ghc922;
-            haskellPackages923 = nixpkgs2205.haskell.packages.ghc923;
             sup = super.commandLineTools or (system: [ ]);
           in
           (sup system) ++ [
             pkgs'.cabal-install
-            haskellPackages923.hlint
-            pkgs'.haskellPackages.cabal-fmt
-            (self.fourmoluFor nixpkgs2205)
-            pkgs'.nixpkgs-fmt
+            (self.hlintFor system)
+            (self.cabalFmtFor system)
+            (self.fourmoluFor system)
+            (self.nixpkgsFmtFor system)
             (self.hlsFor self.ghcVersion system)
             pkgs'.fd
             pkgs'.entr
-            haskellPackages922.apply-refact_0_10_0_0
+            (self.applyRefactFor system)
           ];
 
         projectForGhc = compiler-nix-name: system:
@@ -312,7 +317,9 @@
         };
       };
 
-    addShellCheck = name: package: exec: self: super: {
+    addShellCheck = name: package: addShellCheck' name (_: package);
+
+    addShellCheck' = name: package: exec: self: super: {
       toFlake =
         let
           inherit (self) inputs perSystem pkgsFor';
@@ -326,7 +333,7 @@
                 in
                 pkgs'.runCommand name
                   {
-                    nativeBuildInputs = [ (package pkgs') ];
+                    nativeBuildInputs = [ (package system pkgs') ];
                   } ''
                   export LC_CTYPE=C.UTF-8
                   export LC_ALL=C.UTF-8
@@ -358,7 +365,7 @@
       let
         extStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
       in
-      addShellCheck "formatCheck" (p: self.fourmoluFor p) ''
+      addShellCheck' "formatCheck" (system: _: [ (self.fourmoluFor system) ]) ''
         find -name '*.hs' \
           -not -path './dist*/*' \
           -not -path './haddock/*' \
@@ -367,10 +374,11 @@
         self;
 
     # Enables running hlint on `*.hs` files.
-    enableLintCheck =
-      addShellCheck "lintCheck" (p: [ p.hlint ]) ''
+    enableLintCheck = self:
+      addShellCheck' "lintCheck" (system: _: [ (self.hlintFor system) ]) ''
         find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
-      '';
+      ''
+        self;
 
     # Enables running cabal-fmt on `*.cabal` files.
     enableCabalFormatCheck =
@@ -379,10 +387,11 @@
       '';
 
     # Enables running nixpkgs-fmt on `*.nix` files.
-    enableNixFormatCheck =
-      addShellCheck "nixFormatCheck" (p: [ p.nixpkgs-fmt ]) ''
+    enableNixFormatCheck = self:
+      addShellCheck' "nixFormatCheck" (system: _: [ (self.nixpkgsFmtFor system) ]) ''
         find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
-      '';
+      ''
+        self;
 
     # Plutarch project overlay.
     plutarchProject = self: super:
