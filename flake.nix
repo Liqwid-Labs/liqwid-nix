@@ -10,6 +10,8 @@
   # For nixpkgs, however, where we are undoubtedly depending
   # on a specific release, we can have those here, in the
   # naming format of `nixpkgs-<version>`.
+  #
+  # @since 1.0.0
   inputs.nixpkgs-2205.url = "github:NixOS/nixpkgs/nixos-22.05";
 
   outputs = { self, nixpkgs-2205, nixpkgs }: rec {
@@ -49,6 +51,8 @@
     # - 'toFlake' is expected to be what the flake will eventually resolve to
     #
     # Other attribute conventions may happen as result of using overlays.
+    #
+    # @since 1.0.0
     buildProject =
       args@{ inputs
       , supportedSystems ? inputs.nixpkgs-latest.lib.systems.flakeExposed
@@ -91,6 +95,8 @@
         #
         # For further reading on this, see this blog post:
         # https://blog.layus.be/posts/2020-06-12-nix-overlays.html
+        #
+        # @since 1.0.0
         resolved =
           builtins.foldl' (super: overlay: super // overlay resolved super) base
             (baseOverlays ++ overlays);
@@ -108,6 +114,8 @@
     # - nixpkgs-2205
     # - nixpkgs-latest, which is a *later* version of nixpkgs.
     # - haskell-language-server
+    #
+    # @since 1.0.0
     haskellProject = self: super:
       let
         inherit (self)
@@ -284,6 +292,9 @@
           };
       };
 
+    # Add extra command line tools to the shell.
+    # 
+    # @since 1.0.0
     addCommandLineTools = addF: self: super: {
       commandLineTools = system:
         let
@@ -295,6 +306,8 @@
     };
 
     # Add input-based dependencies to hackage deps
+    #
+    # @since 1.0.0
     addDependencies = addedDependencies: self: super: {
       hackageDeps = (super.hackageDeps or [ ]) ++ addedDependencies;
     };
@@ -302,6 +315,8 @@
     # Add all packages to checks, as a result, running `nix build .#check.${system}`
     # will be a superset of `nix build`. Prefixing "build:" to package name to 
     # avoid overwriting the existing checks.
+    #
+    # @since 1.0.0
     addBuildChecks = self: super:
       let
         inherit (self) perSystem pkgsFor';
@@ -317,8 +332,18 @@
         };
       };
 
+    # Add a check that runs a shell script with some packages in its
+    # executing environment.
+    #
+    # Like addShellCheck but isn't passed `system`.
+    #
+    # @since 1.0.0
     addShellCheck = name: package: addShellCheck' name (_: package);
 
+    # Add a check that runs a shell script with some packages in its
+    # executing environment.
+    #
+    # @since 1.0.0
     addShellCheck' = name: package: exec: self: super: {
       toFlake =
         let
@@ -361,6 +386,8 @@
     #     "-XImportQualifiedPost"
     #   ])
     # ```
+    #
+    # @since 1.0.0
     enableFormatCheck = exts: self:
       let
         extStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
@@ -374,6 +401,8 @@
         self;
 
     # Enables running hlint on `*.hs` files.
+    #
+    # @since 1.0.0
     enableLintCheck = self:
       addShellCheck' "lintCheck" (system: _: [ (self.hlintFor system) ]) ''
         find -name '*.hs' -not -path './dist*/*' -not -path './haddock/*' | xargs hlint 
@@ -381,12 +410,16 @@
         self;
 
     # Enables running cabal-fmt on `*.cabal` files.
+    #
+    # @since 1.0.0
     enableCabalFormatCheck =
       addShellCheck "cabalFormatCheck" (p: [ p.haskellPackages.cabal-fmt ]) ''
         find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
       '';
 
     # Enables running nixpkgs-fmt on `*.nix` files.
+    #
+    # @since 1.0.0
     enableNixFormatCheck = self:
       addShellCheck' "nixFormatCheck" (system: _: [ (self.nixpkgsFmtFor system) ]) ''
         find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
@@ -394,6 +427,8 @@
         self;
 
     # Plutarch project overlay.
+    #
+    # @since 1.0.0
     plutarchProject = self: super:
       let
         inherit (self) inputs pkgsFor pkgsFor';
@@ -641,6 +676,8 @@
       };
 
     # For developing _this repository_, having nixpkgs-fmt available is convenient.
+    #
+    # @since 1.0.0
     devShell = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system:
       let pkgs = import nixpkgs { inherit system; };
       in
