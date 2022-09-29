@@ -230,7 +230,7 @@
             (self.cabalFmtFor system)
             (self.fourmoluFor system)
             (self.nixpkgsFmtFor system)
-            (self.hasktagssFor system)
+            (self.hasktagsFor system)
             (self.hlsFor self.ghcVersion system)
             pkgs'.fd
             pkgs'.entr
