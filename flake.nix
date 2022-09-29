@@ -126,7 +126,7 @@
           (self.nixpkgs2205for system).haskell.packages.ghc923.hlint;
         nixpkgsFmtFor = system: (self.nixpkgs2205for system).nixpkgs-fmt;
         cabalFmtFor = system: (self.pkgsFor' system).haskellPackages.cabal-fmt;
-        ghcTagsFor = system: (self.pkgsFor' system).haskellPackages.ghc-tags;
+        ghcTagsFor = system: (self.nixpkgs2205for system).haskell.packages.ghc923.ghc-tags;
 
         nonReinstallablePkgs = [
           "array"
