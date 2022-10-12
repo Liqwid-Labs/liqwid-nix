@@ -125,13 +125,13 @@
         fourmoluFor = system:
           (self.nixpkgs2205for system).haskell.packages.ghc923.fourmolu_0_6_0_0;
         applyRefactFor = system:
-          (self.nixpkgs2205for system).haskell.packages.ghc922.apply-refact_0_10_0_0;
+          (self.nixpkgs2205for
+            system).haskell.packages.ghc922.apply-refact_0_10_0_0;
         hlintFor = system:
           (self.nixpkgs2205for system).haskell.packages.ghc923.hlint;
-        nixpkgsFmtFor = system:
-          (self.nixpkgs2205for system).nixpkgs-fmt;
-        cabalFmtFor = system:
-          (self.pkgsFor' system).haskellPackages.cabal-fmt;
+        nixpkgsFmtFor = system: (self.nixpkgs2205for system).nixpkgs-fmt;
+        cabalFmtFor = system: (self.pkgsFor' system).haskellPackages.cabal-fmt;
+        hasktagsFor = system: (self.nixpkgs2205for system).haskell.packages.ghc923.hasktags;
 
         nonReinstallablePkgs = [
           "array"
@@ -204,7 +204,6 @@
           (import "${inputs.iohk-nix}/overlays/crypto")
         ];
 
-
         hlsFor' = compiler-nix-name: pkgs:
           pkgs.haskell-nix.cabalProject' {
             modules = [{
@@ -230,7 +229,6 @@
             (self.hlsFor' compiler-nix-name
               pkgs).hsPkgs.haskell-language-server.components.exes.haskell-language-server;
 
-
         commandLineTools = system:
           let
             pkgs' = pkgsFor' system;
@@ -242,6 +240,7 @@
             (self.cabalFmtFor system)
             (self.fourmoluFor system)
             (self.nixpkgsFmtFor system)
+            (self.hasktagsFor system)
             (self.hlsFor self.ghcVersion system)
             pkgs'.fd
             pkgs'.entr
@@ -321,14 +320,17 @@
       let
         inherit (self) perSystem pkgsFor';
         flake = (super.toFlake or { });
-        prefixPackages = system: (pkgsFor' system).lib.mapAttrs'
-          (name: value: { name = "build:" + name; inherit value; });
+        prefixPackages = system:
+          (pkgsFor' system).lib.mapAttrs' (name: value: {
+            name = "build:" + name;
+            inherit value;
+          });
       in
       {
         toFlake = flake // {
           checks = self.perSystem (system:
-            (prefixPackages system flake.packages.${system}) //
-              flake.checks.${system});
+            (prefixPackages system flake.packages.${system})
+              // flake.checks.${system});
         };
       };
 
@@ -371,7 +373,6 @@
         };
     };
 
-
     # Enables running fourmolu on `*.hs` files.
     # Specify the extensions in the first argument.
     #
@@ -390,9 +391,11 @@
     # @since 1.0.0
     enableFormatCheck = exts: self:
       let
-        extStr = builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
+        extStr =
+          builtins.concatStringsSep " " (builtins.map (x: "-o " + x) exts);
       in
-      addShellCheck' "formatCheck" (system: _: [ (self.fourmoluFor system) ]) ''
+      addShellCheck' "formatCheck"
+        (system: _: [ (self.fourmoluFor system) ]) ''
         find -name '*.hs' \
           -not -path './dist*/*' \
           -not -path './haddock/*' \
@@ -421,7 +424,8 @@
     #
     # @since 1.0.0
     enableNixFormatCheck = self:
-      addShellCheck' "nixFormatCheck" (system: _: [ (self.nixpkgsFmtFor system) ]) ''
+      addShellCheck' "nixFormatCheck"
+        (system: _: [ (self.nixpkgsFmtFor system) ]) ''
         find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
       ''
         self;
@@ -685,5 +689,23 @@
         name = "shell";
         buildInputs = [ pkgs.nixpkgs-fmt ];
       });
+
+    checks = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: {
+      nixFormatCheck =
+        let pkgs = import nixpkgs { inherit system; };
+        in
+        pkgs.runCommand "nixFormatCheck"
+          {
+            nativeBuildInputs = [ ];
+            buildInputs = [ pkgs.nixpkgs-fmt ];
+          } ''
+          export LC_CTYPE=C.UTF-8
+          export LC_ALL=C.UTF-8
+          export LANG=C.UTF-8
+          cd ${self}
+          find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt --check
+          mkdir $out
+        '';
+    });
   };
 }
