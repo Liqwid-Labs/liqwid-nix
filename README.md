@@ -2,6 +2,10 @@
 
 A simple library for writing nix flakes in Liqwid Labs projects. The aim of liqwid-nix is to reduce duplication of shared code, while providing a flexible escape for when real changes need to be applied.
 
+### Using direnv.
+
+Since flakes built using `liqwid-nix` provide various command-line tools that are useful for development of the projects they live in, it is useful to have them available when entering a directory. [nix-direnv](https://github.com/nix-community/nix-direnv) helps with this. Setup instructions are available in the repo README. It is not standard practice to _commit_ the `.envrc`, so you are required to create these yourself for every repository you clone. As described in the repo, it boils down to the same thing every time, `echo "use flake" > .envrc && direnv allow`.
+
 ### Example `flake.nix` using `liqwid-nix` for building [plutarch](https://github.com/Plutonomicon/plutarch-plutus) projects.
 
 If you want to build a plutarch project using cabal and nix, here is a simple example `flake.nix` setup:
