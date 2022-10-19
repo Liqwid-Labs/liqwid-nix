@@ -123,7 +123,7 @@
       in
       {
         fourmoluFor = system:
-          (self.nixpkgs2205for system).haskell.packages.ghc923.fourmolu_0_6_0_0;
+          (self.pkgsFor' system).haskell.packages.ghc924.fourmolu;
         applyRefactFor = system:
           (self.nixpkgs2205for
             system).haskell.packages.ghc922.apply-refact_0_10_0_0;
@@ -373,6 +373,105 @@
         };
     };
 
+    # Add a script that can be run using `nix run`.
+    #
+    # The `exec` argument is supplied with `self` and `system`,
+    # so that it can get packages from inside the context.
+    #
+    # @since 1.1.0
+    addRunScript = name: exec: self: super: {
+      toFlake =
+        let
+          inherit (self) inputs perSystem pkgsFor';
+          flake = super.toFlake or { };
+        in
+        flake // {
+          apps = perSystem
+            (system:
+              let
+                pkgs = pkgsFor' system;
+                script = pkgs.writeScriptBin name ''
+                  export LC_CTYPE=C.UTF-8
+                  export LC_ALL=C.UTF-8
+                  export LANG=C.UTF-8
+                  set -x
+                  ${exec self system}
+                '';
+              in
+              (flake.apps.${system} or { }) // {
+                ${name} = {
+                  type = "app";
+                  program = "${script}/bin/${name}";
+                };
+              }
+            );
+        };
+    };
+
+    # Add common scripts for running using `nix run`.
+    #
+    # In many ways, this replaces Makefiles. These scripts
+    # should be runnable without any extra packages being
+    # added to the environment by the user.
+    #
+    # Packages that are necessary only for the script are
+    # inlined using nix inlining.
+    #
+    # @since 1.1.0
+    addCommonRunScripts = self: super:
+      let
+        haskellSources = "$(git ls-tree -r HEAD --full-tree --name-only | grep '.\\+\\.hs')";
+        cabalSources = "$(git ls-tree -r HEAD --full-tree --name-only | grep '.\\+\\.cabal')";
+      in
+      builtins.foldl' (super': add: add self super') super [
+        (addRunScript
+          "nixFormat"
+          (self: system: ''
+            find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs ${self.nixpkgsFmtFor system}/bin/nixpkgs-fmt
+          '')
+        )
+        (addRunScript
+          "haskellFormat"
+          (self: system:
+            let
+              arguments = builtins.concatStringsSep " " (builtins.map (extension: "-o -X" + extension) [
+                "QuasiQuotes"
+                "TemplateHaskell"
+                "TypeApplications"
+                "ImportQualifiedPost"
+                "PatternSynonyms"
+                "OverloadedRecordDot"
+              ]);
+            in
+            ''
+              fourmolu ${arguments} -m inplace ${haskellSources}
+              cabal-fmt -i ${cabalSources}
+            '')
+        )
+        (addRunScript
+          "lint"
+          (self: system: ''
+            hlint -XQuasiQuotes ${haskellSources}
+          ''))
+        (addRunScript "tag" (self: system: "${self.hasktagsFor system}/bin/hasktags -x ${haskellSources}"))
+        (addRunScript
+          "ci"
+          (self: system:
+            (if system != "x86_64-linux" then (builtins.trace "warning: CI only builds on 'x86_64-linux', you are building on ${system}") else (x: x)) ''
+              nix build .#check.${system}
+            '')
+        )
+        (addRunScript
+          "hoogle"
+          (self: system: ''
+            pkill hoogle || true
+            hoogle generate --local=haddock --database=hoo/local.hoo
+            hoogle server --local -p 8081 >> /dev/null &
+            hoogle server --local --database=hoo/local.hoo -p 8082 >> /dev/null &
+          '')
+        )
+      ];
+
     # Enables running fourmolu on `*.hs` files.
     # Specify the extensions in the first argument.
     #
@@ -473,7 +572,7 @@
             extra-hackages = h.extra-hackages ++ (o.extra-hackages or [ ]);
             extra-hackage-tarballs = h.extra-hackage-tarballs
             // (o.extra-hackage-tarballs or { });
-            cabalProjectLocal = o'.cabalProjectLocal or "" + (
+            cabalProjectLocal = o'.cabalProjectLocal or " " + (
               ''
                 allow-newer:
                   cardano-binary:base
@@ -709,3 +808,4 @@
     });
   };
 }
+
