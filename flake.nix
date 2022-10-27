@@ -128,7 +128,7 @@
           (self.nixpkgs2205for
             system).haskell.packages.ghc922.apply-refact_0_10_0_0;
         hlintFor = system:
-          (self.nixpkgs2205for system).haskell.packages.ghc923.hlint;
+          (self.nixpkgs2205for system).haskell.packages.ghc924.hlint;
         nixpkgsFmtFor = system: (self.nixpkgs2205for system).nixpkgs-fmt;
         cabalFmtFor = system: (self.pkgsFor' system).haskellPackages.cabal-fmt;
         hasktagsFor = system: (self.nixpkgs2205for system).haskell.packages.ghc923.hasktags;
