@@ -80,6 +80,27 @@ in
                 type = ghc;
               };
 
+              shell = lib.mkOption {
+                description = ''
+                  Options for the dev shell.
+
+                  Added in: 2.0.
+                '';
+                type = shell;
+              };
+
+              enableHaskellFormatCheck = lib.mkOption {
+                type = types.bool;
+                default = true;
+                description = ''
+                  Whether or not to check for Haskell formatting correctness.
+
+                  This will use the Haskell extensions configured in `ghc.extensions`.
+
+                  Added in: 2.0.
+                '';
+              };
+
               enableBuildChecks = lib.mkOption {
                 type = types.bool;
                 default = false;
@@ -299,7 +320,25 @@ in
               in
               if projectConfig.enableBuildChecks then prefixPackages flake.packages else { };
 
-            checks = flake.checks // buildChecks;
+            haskellFormatCheck =
+              if projectConfig.enableHaskellFormatCheck then
+                let extStr =
+                  builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
+                in
+                {
+                  haskellFormatCheck = utils.shellCheck "haskellFormatCheck"
+                    projectConfig.src
+                    {
+                      nativeBuildInputs = [ fourmolu ];
+                    } ''
+                    find -name '*.hs' \
+                      -not -path './dist*/*' \
+                      -not -path './haddock/*' \
+                        | xargs fourmolu ${extStr} -m check
+                  '';
+                } else { };
+
+            checks = flake.checks // buildChecks // haskellFormatCheck;
           in
           {
             devShell = flake.devShell;

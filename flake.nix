@@ -7,8 +7,8 @@
 
   outputs = { self, nixpkgs-2205, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
-      imports = [ ./nix/templates.nix ];
-      systems = [ "x86_64-linux" "aarch64-darwin" ];
+      imports = [ ./nix/templates.nix ./nix/all-modules.nix ];
+      systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
           pkgs2205 = import nixpkgs-2205 { inherit system; };

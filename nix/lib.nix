@@ -11,4 +11,15 @@
         echo $allChecks
         touch $out
       '';
+
+  shellCheck = name: source: arguments: exec:
+    pkgs.runCommand name arguments
+      ''
+        export LC_CTYPE=C.UTF-8
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
+        cd ${source}
+        ${exec}
+        mkdir $out
+      '';
 }
