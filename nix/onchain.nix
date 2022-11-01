@@ -12,7 +12,6 @@ let
     functionTo
     raw;
 
-  inherit (import ./lib.nix { inherit lib; }) flat2With;
 in
 {
   options = {
@@ -44,6 +43,20 @@ in
 
                   Added in: 2.0.
                 '';
+              };
+            };
+          };
+
+          shell = types.submoduule {
+            options = {
+              extraCommandLineTools = lib.mkOption {
+                type = types.listOf types.package;
+                description = ''
+                  List of extra packages to make available to the shell.
+
+                  Added in: 2.0.
+                '';
+                default = [ ];
               };
             };
           };
@@ -105,16 +118,19 @@ in
   config = {
     perSystem = { config, self', inputs', pkgs, system, ... }:
       let
+        pkgs = import self.inputs.nixpkgs {
+          inherit system;
+          overlays =
+            [
+              self.inputs.haskell-nix.overlay
+              (import "${self.inputs.iohk-nix}/overlays/crypto")
+            ];
+        };
+
+        utils = import ./lib.nix { inherit pkgs lib; };
         makeProject = projectName: projectConfig:
           let
-            pkgs = import self.inputs.nixpkgs {
-              inherit system;
-              overlays =
-                [
-                  self.inputs.haskell-nix.overlay
-                  (import "${self.inputs.iohk-nix}/overlays/crypto")
-                ];
-            };
+
             pkgs-latest = import self.inputs.nixpkgs-latest { inherit system; };
             pkgs2205 = import self.inputs.nixpkgs-2205 { inherit system; };
 
@@ -242,7 +258,7 @@ in
                 pkgs-latest.fd
                 pkgs-latest.entr
                 applyRefact
-              ];
+              ] ++ projectConfig.shell.extraCommandLineTools;
 
             project =
               let
@@ -290,14 +306,16 @@ in
 
             inherit checks;
 
-            check = pkgs.runCommand "combined-checks" { allChecks = builtins.attrValues checks; }
-              ''
-                echo $allChecks
-                touch $out
-              '';
+            check = utils.combineChecks "combined-checks" checks;
           };
 
         projects = lib.mapAttrs makeProject config.onchain;
+
+        projectChecks =
+          utils.flat2With (project: check: project + "_" + check)
+            (lib.mapAttrs
+              (_: project: project.checks // { all = project.check; })
+              projects);
       in
       {
         devShells =
@@ -305,11 +323,10 @@ in
             (_: project: project.devShell)
             projects;
 
-        checks =
-          flat2With (project: check: project + "_" + check)
-            (lib.mapAttrs
-              (_: project: project.checks // { all = project.check; })
-              projects);
+        checks = projectChecks // {
+          all_onchain = utils.combineChecks "all_onchain" projectChecks;
+        };
+
       };
   };
 }
