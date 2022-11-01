@@ -7,7 +7,7 @@
 
   outputs = { self, nixpkgs-2205, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
-      imports = [ ./nix/onchain.nix ];
+      imports = [ ./nix/templates.nix ];
       systems = [ "x86_64-linux" "aarch64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
@@ -22,8 +22,6 @@
           };
           formatter = pkgs2205.nixpkgs-fmt;
         };
-      flake = {
-        onchain = ./nix/onchain.nix;
-      };
+      flake = { };
     };
 }
