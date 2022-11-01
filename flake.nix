@@ -9,9 +9,10 @@
     flake-parts.lib.mkFlake { inherit self; } {
       imports = [ ./nix/templates.nix ./nix/all-modules.nix ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
-      perSystem = { config, self', inputs', pkgs, system, ... }:
+      perSystem = { config, self', inputs', pkgs, lib, system, ... }:
         let
           pkgs2205 = import nixpkgs-2205 { inherit system; };
+          utils = import ./nix/lib.nix { inherit pkgs lib; };
         in
         {
           devShells.default = pkgs.mkShell {
@@ -21,6 +22,12 @@
             ];
           };
           formatter = pkgs2205.nixpkgs-fmt;
+
+          # This check is for `liqwid-nix` itself.
+          checks.nixFormat =
+            utils.shellCheck "nixFormat" ./. { nativeBuildInputs = [ pkgs2205.nixpkgs-fmt ]; } ''
+              find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt
+            '';
         };
       flake = { };
     };
