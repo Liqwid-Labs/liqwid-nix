@@ -29,6 +29,12 @@
               find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt
             '';
         };
-      flake = { };
+      flake = {
+        config.hydraJobs = {
+          packages = self.packages.x86_64-linux;
+          checks = self.checks.x86_64-linux;
+          devShells = self.devShells.x86_64-linux;
+        };
+      };
     };
 }
