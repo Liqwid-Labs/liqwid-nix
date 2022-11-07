@@ -47,7 +47,7 @@ in
             };
           };
 
-          shell = types.submoduule {
+          shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
                 type = types.listOf types.package;
@@ -96,6 +96,16 @@ in
                   Whether or not to check for Haskell formatting correctness.
 
                   This will use the Haskell extensions configured in `ghc.extensions`.
+
+                  Added in: 2.0.
+                '';
+              };
+
+              enableCabalFormatCheck = lib.mkOption {
+                type = types.bool;
+                default = true;
+                description = ''
+                  Whether or not to check for Cabal formatting correctness.
 
                   Added in: 2.0.
                 '';
@@ -311,34 +321,56 @@ in
             flake = project.flake { };
 
             buildChecks =
-              let
-                prefixPackages =
-                  pkgs-latest.lib.mapAttrs' (name: value: {
+              lib.ifEnable projectConfig.enableBuildChecks (
+                pkgs-latest.lib.mapAttrs'
+                  (name: value: {
                     name = "build:" + name;
                     inherit value;
-                  });
-              in
-              if projectConfig.enableBuildChecks then prefixPackages flake.packages else { };
+                  })
+                  flake.packages
+              );
 
             haskellFormatCheck =
-              if projectConfig.enableHaskellFormatCheck then
-                let extStr =
-                  builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
-                in
-                {
-                  haskellFormatCheck = utils.shellCheck "haskellFormatCheck"
-                    projectConfig.src
-                    {
-                      nativeBuildInputs = [ fourmolu ];
-                    } ''
+              let extStr =
+                builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
+              in
+              lib.ifEnable projectConfig.enableHaskellFormatCheck {
+                haskellFormatCheck = utils.shellCheck
+                  "haskellFormatCheck"
+                  projectConfig.src
+                  {
+                    nativeBuildInputs = [ fourmolu ];
+                  }
+                  ''
                     find -name '*.hs' \
                       -not -path './dist*/*' \
                       -not -path './haddock/*' \
                         | xargs fourmolu ${extStr} -m check
                   '';
-                } else { };
+              };
 
-            checks = flake.checks // buildChecks // haskellFormatCheck;
+            cabalFormatCheck =
+              lib.ifEnable projectConfig.enableCabalFormatCheck
+                {
+                  cabalFormatCheck = utils.shellCheck
+                    "cabalFormatCheck"
+                    projectConfig.src
+                    {
+                      nativeBuildInputs = [ cabalFmt ];
+                    }
+                    ''
+                      find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
+                    '';
+                };
+
+            checks =
+              lib.fold lib.mergeAttrs { }
+                [
+                  flake.checks
+                  buildChecks
+                  haskellFormatCheck
+                  cabalFormatCheck
+                ];
           in
           {
             devShell = flake.devShell;
