@@ -2,6 +2,7 @@
 let
   modules = {
     onchain = ./onchain.nix;
+    offchain = ./offchain.nix;
   };
 in
 {
