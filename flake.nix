@@ -12,7 +12,7 @@
       perSystem = { config, self', inputs', pkgs, lib, system, ... }:
         let
           pkgs2205 = import nixpkgs-2205 { inherit system; };
-          utils = import ./nix/lib.nix { inherit pkgs lib; };
+          utils = import ./nix/utils.nix { inherit pkgs lib; };
         in
         {
           devShells.default = pkgs.mkShell {

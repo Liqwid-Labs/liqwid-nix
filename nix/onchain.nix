@@ -158,7 +158,7 @@ in
             ];
         };
 
-        utils = import ./lib.nix { inherit pkgs lib; };
+        utils = import ./utils.nix { inherit pkgs lib; };
         makeProject = projectName: projectConfig:
           let
 
