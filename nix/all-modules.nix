@@ -2,6 +2,7 @@
 let
   modules = {
     onchain = ./onchain.nix;
+    run = ./run/default.nix;
   };
 in
 {
