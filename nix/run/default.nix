@@ -51,6 +51,13 @@ in
                   type = types.listOf types.str;
                   default = [ ];
                 };
+                help = lib.mkOption {
+                  description = ''
+                    Help message to provide when using `nix run .#help -- <name>`.
+                  '';
+                  type = types.str;
+                  default = "No help provided.";
+                };
               };
             };
         in
@@ -106,7 +113,9 @@ in
                     export LC_CTYPE=C.UTF-8
                     export LC_ALL=C.UTF-8
                     export LANG=C.UTF-8
-                    echo "hi"
+                    set -x
+
+                    # ${name}
                     ${config.script}
                   '';
                 };
@@ -118,10 +127,54 @@ in
               { }
               (builtins.attrValues
                 (lib.mapAttrs makeGroups config.run)));
-        apps = (lib.mapAttrs makeApp config.run // groups);
+        apps = (lib.mapAttrs makeApp config.run // groups
+          // {
+          help = {
+            type = "app";
+            program =
+              let
+                renderGroups = gs:
+                  if builtins.length gs == 0 then
+                    ""
+                  else
+                    "(groups: ${builtins.concatStringsSep ", " gs})";
+                renderCase = name: script:
+                  ''${name})
+                  echo "usage: nix run .#${name}"
+                  echo
+                  ${script.help}
+                ;;'';
+              in
+              pkgs.writeShellApplication
+                {
+                  name = "help";
+                  text = ''
+                    if [ $# -eq 1 ]; then
+                      case $1 in
+                        ${builtins.concatStringsSep "\n" (builtins.attrValues (builtins.mapAttrs renderCase config.run))}
+                        *) echo "error: run script $1 not found"; exit 1 ;;
+                      esac
+                    else
+                      echo "usage: nix run .#<name>"
+                      echo
+                      echo "  Groups run multiple scripts at once. These are commonly used"
+                      echo "  for formatting and linting. To get a description of a particular"
+                      echo "  script, use \`nix run .#help -- <name>\`."
+                      echo
+                      echo "Available scripts:"
+                      echo "${builtins.concatStringsSep "\n" (builtins.attrValues (builtins.mapAttrs (n: c: "  ${n} ${renderGroups c.groups}") config.run))}"
+                      echo
+                      echo "Available groups:"
+                      echo "${builtins.concatStringsSep "\n" (builtins.map (p: "  " + p) (builtins.attrNames groups))}"
+                    fi
+                  '';
+                };
+          };
+        });
       in
       {
         inherit apps;
       };
   };
 }
+
