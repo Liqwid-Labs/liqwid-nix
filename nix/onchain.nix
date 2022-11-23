@@ -34,7 +34,14 @@ in
 
               extensions = lib.mkOption {
                 type = types.listOf types.str;
-                default = [ ];
+                default = [
+                  "QuasiQuotes"
+                  "TemplateHaskell"
+                  "TypeApplications"
+                  "ImportQualifiedPost"
+                  "PatternSynonyms"
+                  "OverloadedRecordDot"
+                ];
                 description = ''
                   The list of extensions to use with the project.
                   List them out without the '-X' prefix.
@@ -113,7 +120,7 @@ in
 
               enableBuildChecks = lib.mkOption {
                 type = types.bool;
-                default = false;
+                default = true;
                 description = ''
                   Whether or not to enable adding the package builds to checks.
 
@@ -215,7 +222,6 @@ in
               "Win32"
               "xhtml"
             ];
-
 
             hackageDeps = [
               "${self.inputs.plutarch.inputs.flat}"
@@ -371,6 +377,9 @@ in
                   haskellFormatCheck
                   cabalFormatCheck
                 ];
+
+            haskellSources = "$(git ls-tree -r HEAD --full-tree --name-only | grep '.\\+\\.hs')";
+            cabalSources = "$(git ls-tree -r HEAD --full-tree --name-only | grep '.\\+\\.cabal')";
           in
           {
             devShell = flake.devShell;
@@ -378,6 +387,65 @@ in
             inherit checks;
 
             check = utils.combineChecks "combined-checks" checks;
+
+            run.nixFormat =
+              {
+                dependencies = [ nixpkgsFmt ];
+                script = ''
+                  find . -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' -exec nixpkgs-fmt {} +                
+                '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Formats nix files using nixpkgs-fmt."
+                '';
+              };
+            run.haskellFormat =
+              let
+                arguments = builtins.concatStringsSep " " (builtins.map (extension: "-o -X" + extension) projectConfig.ghc.extensions);
+              in
+              {
+                dependencies = [ fourmolu cabalFmt ];
+                script = ''
+                  # shellcheck disable=SC2046
+                  fourmolu ${arguments} -m inplace ${haskellSources}
+                  # shellcheck disable=SC2046
+                  cabal-fmt -i ${cabalSources}
+                '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Runs fourmolu and cabal-fmt."
+                  echo 
+                  echo "  fourmolu: A formatter for Haskell source code."
+                  echo "  cabal-fmt: Format .cabal files preserving the original field ordering, and comments."
+                  echo 
+                  echo "  Fourmolu is using the following Haskell extensions:"
+                  echo "${builtins.concatStringsSep "\n" (builtins.map (p: "  - " + p) projectConfig.ghc.extensions)}"
+                  echo
+                  echo "  NOTE: You can change these in the flake module!"
+                '';
+              };
+            run.haskellLint =
+              {
+                dependencies = [ hlint ];
+                script = ''
+                  # shellcheck disable=SC2046
+                  hlint -XQuasiQuotes ${haskellSources}
+                '';
+                groups = [ "lint" "precommit" ];
+                help = ''
+                  echo "  hlint: HLint gives hints on how to improve Haskell code."
+                '';
+              };
+            run.hasktags =
+              {
+                dependencies = [ hasktags ];
+                script = ''
+                  hasktags -x ${haskellSources}
+                '';
+                help = ''
+                  echo '  hasktags: Produces ctags "tags" and etags "TAGS" files for Haskell programs.'
+                '';
+              };
           };
 
         projects = lib.mapAttrs makeProject config.onchain;
@@ -387,6 +455,12 @@ in
             (lib.mapAttrs
               (_: project: project.checks // { all = project.check; })
               projects);
+
+        projectScripts =
+          utils.flat2With (project: script: project + "_" + script)
+            (lib.mapAttrs
+              (_: project: project.run)
+              projects);
       in
       {
         devShells =
@@ -394,10 +468,11 @@ in
             (_: project: project.devShell)
             projects;
 
+        run = projectScripts;
+
         checks = projectChecks // {
           all_onchain = utils.combineChecks "all_onchain" projectChecks;
         };
-
       };
   };
 }
