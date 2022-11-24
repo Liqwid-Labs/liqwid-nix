@@ -24,6 +24,8 @@ in
                 dependencies = lib.mkOption {
                   description = ''
                     The dependencies to include in the script's environment.
+
+                    Added in: 2.0.
                   '';
                   type = types.listOf types.package;
                   default = [ ];
@@ -31,6 +33,8 @@ in
                 script = lib.mkOption {
                   description = ''
                     The script to run.
+
+                    Added in: 2.0.
                   '';
                   type = types.str;
                   default = "echo UNIMPLEMENTED RUN SCRIPT";
@@ -38,6 +42,8 @@ in
                 doCheck = lib.mkOption {
                   description = ''
                     Whether this script should also be a check.
+
+                    Added in: 2.0.
                   '';
                   type = types.bool;
                   default = false;
@@ -47,6 +53,8 @@ in
                     Setting group allows running multiple run scripts all at once.
 
                     These groups will be aliases to all of the scripts that tagged them.
+
+                    Added in: 2.0.
                   '';
                   type = types.listOf types.str;
                   default = [ ];
@@ -54,6 +62,8 @@ in
                 help = lib.mkOption {
                   description = ''
                     Help message to provide when using `nix run .#help -- <name>`.
+
+                    Added in: 2.0.
                   '';
                   type = types.str;
                   default = "No help provided.";
@@ -67,6 +77,8 @@ in
               Scripts that can be run using `nix run`.
 
               These are intended to replace makefiles.
+
+              Added in: 2.0.
             '';
             type = types.attrsOf runScript;
             default = { };
