@@ -123,7 +123,7 @@
       in
       {
         fourmoluFor = system:
-          (self.pkgsFor' system).haskell.packages.ghc924.fourmolu_0_8_2_0;
+          (self.pkgsFor' system).haskell.packages.ghc924.fourmolu_0_9_0_0;
         applyRefactFor = system:
           (self.nixpkgs2205for
             system).haskell.packages.ghc922.apply-refact_0_10_0_0;
@@ -633,6 +633,11 @@
           mkdir $out
         '';
     });
+
+    hydraJobs = {
+      checks = { inherit (self.checks) x86_64-linux; };
+      devShell = { inherit (self.devShell) x86_64-linux; };
+    };
   };
 }
 
