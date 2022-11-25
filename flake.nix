@@ -633,6 +633,11 @@
           mkdir $out
         '';
     });
+
+    hydraJobs = {
+      checks = { inherit (self.checks) x86_64-linux; };
+      devShell = { inherit (self.devShell) x86_64-linux; };
+    };
   };
 }
 
