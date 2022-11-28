@@ -177,11 +177,11 @@ in
             pkgs2205 = import liqwid-nix.nixpkgs-2205 { inherit system; };
 
             fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
-            applyRefact = pkgs2205.haskell.packages.ghc922.apply-refact_0_10_0_0;
-            hlint = pkgs2205.haskell.packages.ghc923.hlint;
+            applyRefact = pkgs2205.haskell.packages.ghc924.apply-refact_0_10_0_0;
+            hlint = pkgs2205.haskell.packages.ghc924.hlint;
             nixpkgsFmt = pkgs2205.nixpkgs-fmt;
             cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
-            hasktags = pkgs2205.haskell.packages.ghc923.hasktags;
+            hasktags = pkgs2205.haskell.packages.ghc924.hasktags;
 
             ghc = pkgs.haskell.compiler.${projectConfig.ghc.version};
 
@@ -238,7 +238,7 @@ in
                 hackageDeps;
 
             haskellModules = [
-              # Stolen 
+              # From mlabs-tooling.nix
               (
                 let
                   responseFile = builtins.toFile "response-file" ''
@@ -270,7 +270,7 @@ in
                 }
               )
               ({ config, pkgs, hsPkgs, ... }: {
-                inherit nonReinstallablePkgs; # Needed for a lot of different things
+                inherit nonReinstallablePkgs;
                 packages = {
                   cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf pkgs.secp256k1 ] ];
                   cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
@@ -285,7 +285,6 @@ in
                   inherit nonReinstallablePkgs;
                   reinstallableLibGhc = false;
                 }];
-
 
                 compiler-nix-name = projectConfig.ghc.version;
                 src = "${liqwid-nix.haskell-language-server}";
@@ -319,6 +318,9 @@ in
                     withHoogle = true;
                     exactDeps = true;
                     nativeBuildInputs = commandLineTools;
+                    shellHook = ''
+                      liqwid(){ c=$1; shift; nix run .#$c -- $@ 2>/dev/null; }
+                    '';
                   };
 
                   inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${liqwid-nix.ghc-next-packages}";
