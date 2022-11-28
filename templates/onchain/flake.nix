@@ -2,49 +2,23 @@
   description = "Example Liqwid Plutarch project";
 
   inputs = {
-    flake-parts.url = "github:hercules-ci/flake-parts";
-
-    liqwid-nix.url = "github:Liqwid-Labs/liqwid-nix/liqwid-nix-2.0";
-
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.follows = "liqwid-nix/nixpkgs";
     nixpkgs-latest.url = "github:NixOS/nixpkgs";
-    nixpkgs-2111.url = "github:NixOS/nixpkgs/nixpkgs-21.11-darwin";
-    nixpkgs-2205.follows = "liqwid-nix/nixpkgs-2205";
 
-    iohk-nix.follows = "plutarch/iohk-nix";
-    haskell-nix-extra-hackage.follows = "plutarch/haskell-nix-extra-hackage";
-    haskell-nix.follows = "plutarch/haskell-nix";
-    haskell-language-server.follows = "plutarch/haskell-language-server";
-
-    plutarch = {
-      url = "github:Plutonomicon/plutarch-plutus?ref=master";
-      inputs.emanote.follows =
-        "plutarch/haskell-nix/nixpkgs-unstable";
-      inputs.nixpkgs.follows =
-        "plutarch/haskell-nix/nixpkgs-unstable";
+    liqwid-nix = {
+      url = "/home/emi/work/liqwid/liqwid-nix";
+      inputs.nixpkgs-latest.follows = "nixpkgs-latest";
     };
-
-    plutarch-numeric.url =
-      "github:Liqwid-Labs/plutarch-numeric?ref=main";
-    plutarch-safe-money.url =
-      "github:Liqwid-Labs/plutarch-safe-money?ref=main";
-    liqwid-plutarch-extra.url =
-      "github:Liqwid-Labs/liqwid-plutarch-extra?ref=main";
-    plutarch-quickcheck.url =
-      "github:liqwid-labs/plutarch-quickcheck?ref=staging";
-    plutarch-context-builder.url =
-      "github:Liqwid-Labs/plutarch-context-builder?ref=main";
-    liqwid-script-export.url =
-      "github:Liqwid-Labs/liqwid-script-export?ref=main";
   };
 
   outputs = { self, liqwid-nix, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
       imports = [
         liqwid-nix.onchain
-        ./onchain
+        liqwid-nix.run
+        ./.
       ];
-      systems = [ "x86_64-linux" "aarch64-darwin" ];
+      systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, system, ... }: { };
     };
 }
