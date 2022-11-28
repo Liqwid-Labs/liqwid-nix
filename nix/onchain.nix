@@ -28,7 +28,7 @@ in
 
                   Added in: 2.0.
                 '';
-                default = "ghc923";
+                default = "ghc924";
                 type = types.str;
               };
 
@@ -156,23 +156,27 @@ in
   config = {
     perSystem = { config, self', inputs', pkgs, system, ... }:
       let
-        pkgs = import self.inputs.nixpkgs {
+        liqwid-nix = self.inputs.liqwid-nix.inputs;
+
+        pkgs = import liqwid-nix.nixpkgs {
           inherit system;
           overlays =
             [
-              self.inputs.haskell-nix.overlay
-              (import "${self.inputs.iohk-nix}/overlays/crypto")
+              liqwid-nix.haskell-nix.overlay
+              (import "${liqwid-nix.iohk-nix}/overlays/crypto")
             ];
         };
+
+        inherit (pkgs) haskell-nix;
 
         utils = import ./utils.nix { inherit pkgs lib; };
         makeProject = projectName: projectConfig:
           let
 
-            pkgs-latest = import self.inputs.nixpkgs-latest { inherit system; };
-            pkgs2205 = import self.inputs.nixpkgs-2205 { inherit system; };
+            pkgs-latest = import liqwid-nix.nixpkgs-latest { inherit system; };
+            pkgs2205 = import liqwid-nix.nixpkgs-2205 { inherit system; };
 
-            fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_8_2_0;
+            fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
             applyRefact = pkgs2205.haskell.packages.ghc922.apply-refact_0_10_0_0;
             hlint = pkgs2205.haskell.packages.ghc923.hlint;
             nixpkgsFmt = pkgs2205.nixpkgs-fmt;
@@ -224,59 +228,67 @@ in
             ];
 
             hackageDeps = [
-              "${self.inputs.plutarch.inputs.flat}"
-              "${self.inputs.plutarch.inputs.protolude}"
-              "${self.inputs.plutarch.inputs.cardano-prelude}/cardano-prelude"
-              "${self.inputs.plutarch.inputs.cardano-crypto}"
-              "${self.inputs.plutarch.inputs.cardano-base}/binary"
-              "${self.inputs.plutarch.inputs.cardano-base}/cardano-crypto-class"
-              "${self.inputs.plutarch.inputs.plutus}/plutus-core"
-              "${self.inputs.plutarch.inputs.plutus}/plutus-ledger-api"
-              "${self.inputs.plutarch.inputs.plutus}/plutus-tx"
-              "${self.inputs.plutarch.inputs.plutus}/prettyprinter-configurable"
-              "${self.inputs.plutarch.inputs.plutus}/word-array"
-              "${self.inputs.plutarch.inputs.secp256k1-haskell}"
-              "${self.inputs.plutarch.inputs.plutus}/plutus-tx-plugin" # necessary for FFI tests
-              "${self.inputs.plutarch}"
-              "${self.inputs.plutarch}/plutarch-extra"
+              "${liqwid-nix.plutarch}"
+              "${liqwid-nix.plutarch}/plutarch-extra"
             ] ++ projectConfig.extraHackageDeps;
 
             customHackages =
-              self.inputs.haskell-nix-extra-hackage.mkHackagesFor system
+              liqwid-nix.haskell-nix-extra-hackage.mkHackagesFor system
                 projectConfig.ghc.version
                 hackageDeps;
 
             haskellModules = [
+              # Stolen 
+              (
+                let
+                  responseFile = builtins.toFile "response-file" ''
+                    --optghc=-XFlexibleContexts
+                    --optghc=-Wwarn
+                    --optghc=-fplugin-opt=PlutusTx.Plugin:defer-errors
+                  '';
+                  l = [
+                    "cardano-binary"
+                    "cardano-crypto-class"
+                    "cardano-crypto-praos"
+                    "cardano-prelude"
+                    "heapwords"
+                    "measures"
+                    "strict-containers"
+                    "cardano-ledger-byron"
+                    "cardano-slotting"
+                  ];
+                in
+                {
+                  packages = builtins.listToAttrs (builtins.map
+                    (name: {
+                      inherit name;
+                      value.components.library.setupHaddockFlags = [ "--haddock-options=@${responseFile}" ];
+                      value.components.library.ghcOptions = [ "-XFlexibleContexts" "-Wwarn" "-fplugin-opt=PlutusTx.Plugin:defer-errors" ];
+                      value.components.library.extraSrcFiles = [ responseFile ];
+                    })
+                    l);
+                }
+              )
               ({ config, pkgs, hsPkgs, ... }: {
                 inherit nonReinstallablePkgs; # Needed for a lot of different things
                 packages = {
-                  cardano-binary.doHaddock = false;
-                  cardano-binary.ghcOptions = [ "-Wwarn" ];
-                  cardano-crypto-class.components.library.pkgconfig =
-                    pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
-                  cardano-crypto-class.doHaddock = false;
-                  cardano-crypto-class.ghcOptions = [ "-Wwarn" ];
-                  cardano-crypto-praos.components.library.pkgconfig =
-                    pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
-                  cardano-prelude.doHaddock =
-                    false; # somehow above options are not applied?
-                  cardano-prelude.ghcOptions = [ "-Wwarn" ];
-                  # Workaround missing support for build-tools:
-                  # https://github.com/input-output-hk/haskell.nix/issues/231
-                  plutarch-test.components.exes.plutarch-test.build-tools =
-                    [ config.hsPkgs.hspec-discover ];
+                  cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf pkgs.secp256k1 ] ];
+                  cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
+                  plutus-simple-model.components.library.setupHaddockFlags = [ "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors" ];
                 };
               })
             ];
 
             hls' =
-              pkgs.haskell-nix.cabalProject' {
+              haskell-nix.cabalProject' {
                 modules = [{
                   inherit nonReinstallablePkgs;
                   reinstallableLibGhc = false;
                 }];
+
+
                 compiler-nix-name = projectConfig.ghc.version;
-                src = "${self.inputs.haskell-language-server}";
+                src = "${liqwid-nix.haskell-language-server}";
                 sha256map."https://github.com/pepeiborra/ekg-json"."7a0af7a8fd38045fd15fb13445bdcc7085325460" =
                   "fVwKxGgM0S4Kv/4egVAAiAjV7QB5PBqMVMCfsv7otIQ=";
               };
@@ -300,7 +312,7 @@ in
             project =
               let
                 hackages = customHackages;
-                pkgSet = pkgs.haskell-nix.cabalProject' {
+                pkgSet = haskell-nix.cabalProject' {
                   inherit (projectConfig) src;
                   compiler-nix-name = projectConfig.ghc.version;
                   shell = {
@@ -308,17 +320,49 @@ in
                     exactDeps = true;
                     nativeBuildInputs = commandLineTools;
                   };
+
+                  inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${liqwid-nix.ghc-next-packages}";
+
                   modules = haskellModules ++ hackages.modules;
                   extra-hackages = hackages.extra-hackages;
                   extra-hackage-tarballs = hackages.extra-hackage-tarballs;
                   cabalProjectLocal =
                     ''
+                      repository ghc-next-packages
+                        url: https://input-output-hk.github.io/ghc-next-packages
+                        secure: True
+                        root-keys:
+                        key-threshold: 0
+
                       allow-newer:
-                        *:base
-                        , canonical-json:bytestring
-                        , plutus-core:ral
-                        , plutus-core:some
-                        , inline-r:singletons
+                        *:base,
+                        *:containers,
+                        *:directory,
+                        *:time,
+                        *:bytestring,
+                        *:aeson,
+                        *:protolude,
+                        *:template-haskell,
+                        *:ghc-prim,
+                        *:ghc,
+                        *:cryptonite,
+                        *:formatting,
+                        monoidal-containers:aeson,
+                        size-based:template-haskell,
+                        snap-server:attoparsec,
+                      --  tasty-hedgehog:hedgehog,
+                        *:hashable,
+                        *:text
+
+                      constraints:
+                        text >= 2
+                        , aeson >= 2
+                        , dependent-sum >= 0.7
+                        , protolude >= 0.3.2
+                        , nothunks >= 0.1.3
+
+                      package nothunks
+                        flags: +vector +bytestring +text
                     '';
                 };
               in
@@ -446,6 +490,16 @@ in
                   echo '  hasktags: Produces ctags "tags" and etags "TAGS" files for Haskell programs.'
                 '';
               };
+            run.hoogle =
+              {
+                dependencies = project.shell.nativeBuildInputs;
+                script = ''
+                  hoogle server --local -p 8080 >/dev/null 
+                '';
+                help = ''
+                  echo '  Run a hoogle server with the local packages on port 8080.'
+                '';
+              };
           };
 
         projects = lib.mapAttrs makeProject config.onchain;
@@ -457,7 +511,7 @@ in
               projects);
 
         projectScripts =
-          utils.flat2With (project: script: project + "_" + script)
+          utils.flat2With (project: script: if project == "default" then script else project + "_" + script)
             (lib.mapAttrs
               (_: project: project.run)
               projects);
