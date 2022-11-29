@@ -16,7 +16,7 @@
     nixpkgs-latest.url = "github:NixOS/nixpkgs";
 
     liqwid-nix = {
-      url = "/home/emi/work/liqwid/liqwid-nix";
+      url = "github:Liqwid-Labs/liqwid-nix/liqwid-nix-2.0";
       inputs.nixpkgs-latest.follows = "nixpkgs-latest";
     };
   };

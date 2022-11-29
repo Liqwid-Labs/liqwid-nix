@@ -319,7 +319,7 @@ in
                     exactDeps = true;
                     nativeBuildInputs = commandLineTools;
                     shellHook = ''
-                      liqwid(){ c=$1; shift; nix run .#$c -- $@ 2>/dev/null; }
+                      liqwid(){ c=$1; shift; nix run .#$c -- $@; }
                     '';
                   };
 
