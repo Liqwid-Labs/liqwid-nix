@@ -16,5 +16,6 @@
         enableBuildChecks = true;
         extraHackageDeps = [ ];
       };
+      ci.required = [ "all_onchain" ];
     };
 }
