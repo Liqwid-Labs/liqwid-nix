@@ -24,7 +24,7 @@ in
                 description = ''
                   The version name of GHC to use.
 
-                  Examples: ghc923, ghc924, ghc8107.
+                  Examples: ghc923, ghc925, ghc8107.
 
                   Added in: 2.0.
                 '';
