@@ -12,13 +12,9 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs?rev=334ec8b503c3981e37a04b817a70e8d026ea9e84";
+    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
     nixpkgs-latest.url = "github:NixOS/nixpkgs";
     nixpkgs-2205.url = "github:NixOS/nixpkgs/nixos-22.05";
-
-    # temporary fix for nix versions that have the transitive follows bug
-    # see https://github.com/NixOS/nix/issues/6013
-    nixpkgs-2111.url = "github:NixOS/nixpkgs/nixpkgs-21.11-darwin";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
 
@@ -26,7 +22,7 @@
     haskell-nix-extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage";
     haskell-nix-extra-hackage.inputs.haskell-nix.follows = "haskell-nix";
     haskell-nix-extra-hackage.inputs.nixpkgs.follows = "nixpkgs";
-    haskell-nix.url = "github:input-output-hk/haskell.nix?rev=5eccdb523ce665f713f3c270aa8f45c23cc659c2";
+    haskell-nix.url = "github:input-output-hk/haskell.nix?rev=cbf1e918b6e278a81c385155605b8504e498efef";
     iohk-nix.url = "github:input-output-hk/iohk-nix/4848df60660e21fbb3fe157d996a8bac0a9cf2d6";
     iohk-nix.flake = false;
 
@@ -35,7 +31,6 @@
 
     haskell-language-server.url = "github:haskell/haskell-language-server";
     haskell-language-server.flake = false;
-    # Plutarch and its friends
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=emiflake/export-script-constructor";
   };
 
@@ -50,7 +45,7 @@
         in
         {
           devShells.default = pkgs.mkShell {
-            name = "liqwid-nix dev shell";
+            name = "liqwid-nix-dev-shell";
             buildInputs = [
               pkgs2205.nixpkgs-fmt
             ];
