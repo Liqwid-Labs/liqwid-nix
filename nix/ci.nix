@@ -78,7 +78,7 @@ in
                 nix build .#checks.${system}.required
               '';
               help = ''
-                echo "  Simply runs the \`required\` check for the given system.'
+                echo "  Simply runs the \`required\` check for the given system.'"
               '';
             };
           };
