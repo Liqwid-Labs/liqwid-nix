@@ -1,4 +1,3 @@
-# TODO: on-chain Plutarch project configuration module.
 { self, config, lib, flake-parts-lib, ... }:
 let
   inherit (flake-parts-lib)

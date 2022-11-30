@@ -36,7 +36,10 @@
 
   outputs = { self, nixpkgs-2205, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
-      imports = [ ./nix/templates.nix ./nix/all-modules.nix ];
+      imports = [
+        ./nix/templates.nix
+        ./nix/all-modules.nix
+      ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, lib, system, ... }:
         let
