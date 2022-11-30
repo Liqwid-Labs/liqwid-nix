@@ -173,10 +173,10 @@ in
                       echo "  script, use \`nix run .#help -- <name>\`."
                       echo
                       echo "Available scripts:"
-                      echo "${builtins.concatStringsSep "\n" (builtins.attrValues (builtins.mapAttrs (n: c: "  ${n} ${renderGroups c.groups}") config.run))}"
+                      ${builtins.concatStringsSep "\n" (builtins.attrValues (builtins.mapAttrs (n: c: "  echo '  ${n} ${renderGroups c.groups}'") config.run))}
                       echo
                       echo "Available groups:"
-                      echo "${builtins.concatStringsSep "\n" (builtins.map (p: "  " + p) (builtins.attrNames groups))}"
+                      ${builtins.concatStringsSep "\n" (builtins.map (p: "  echo '  ${p}'") (builtins.attrNames groups))}
                     fi
                   '';
                 };
