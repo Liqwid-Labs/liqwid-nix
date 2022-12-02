@@ -155,6 +155,31 @@ in
                   echo
                   ${script.help}
                 ;;'';
+                renderGroupCase = name:
+                  let
+                    scripts =
+                      (lib.filterAttrs
+                        (_: p: builtins.elem name p.groups)
+                        config.run);
+                    helps =
+                      builtins.attrValues (lib.mapAttrs
+                        (n: s:
+                          ''
+                            echo "* \"${n}\""
+                            echo
+                            ${s.help}
+                          '')
+                        scripts);
+                  in
+                  ''${name})
+                    echo "useage nix run.#${name}"
+                    echo
+                    echo "\"${name}\" group runs following scripts:"
+                    echo "  ${builtins.concatStringsSep "," (builtins.attrNames scripts)}"
+                    echo
+                    echo "Description of each scripts:"
+                    ${builtins.concatStringsSep "\necho\n" helps}
+                  ;;'';
               in
               pkgs.writeShellApplication
                 {
@@ -163,6 +188,7 @@ in
                     if [ $# -eq 1 ]; then
                       case $1 in
                         ${builtins.concatStringsSep "\n" (builtins.attrValues (builtins.mapAttrs renderCase config.run))}
+                        ${builtins.concatStringsSep "\n" (builtins.map renderGroupCase (builtins.attrNames groups))}
                         *) echo "error: run script $1 not found"; exit 1 ;;
                       esac
                     else
@@ -188,4 +214,3 @@ in
       };
   };
 }
-
