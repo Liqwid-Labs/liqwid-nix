@@ -43,6 +43,30 @@ in
                 description = '' FIXME '';
                 type = types.path;
               };
+
+              browserRuntime = lib.mkOption {
+                description = '' FIXME '';
+                type= types.bool;
+                default = true;
+              };
+
+              webpackConfig = lib.mkOption {
+                description = '' FIXME '';
+                type = types.string;
+                default = "webpack.config.js";
+              };
+
+              bundledModuleName = lib.mkOption {
+                description = '' FIXME '';
+                type = types.string;
+                default = "output.js";
+              };
+
+              enableCheck = lib.mkOption {
+                description = '' FIXME '';
+                type = types.bool;
+                default = false;
+              };
             };
           };
 
@@ -100,9 +124,10 @@ in
                 default = { };
               };
 
-              bundle = lib.mkOption {
+              bundles = lib.mkOption {
                 description = '' FIXME '';
-                type = bundle;
+                type = types.attrsOf bundle;
+                default = { };
               };
 
               plutip = lib.mkOption {
@@ -192,8 +217,29 @@ in
               };
               in pkgSet;
 
+            bundles = (lib.mapAttrs
+              (_: bundle: project.bundlePursProject {
+                inherit (bundle) main entrypoint;
+              })
+              projectConfig.bundles);
+
             checks = {
-              plutip-test =
+              bundle-checks =
+                utils.flat2With (bundleName: _: bundleName)
+                  (lib.mapAttrs (bundleName: _: bundles.${bundleName})
+                  (lib.filterAttrs (_: bundle: bundle.enableCheck)
+                    projectConfig.bundles));
+
+              tests =
+                lib.ifEnable
+                  (projectConfig ? tests)
+                  (project.runPursTest {
+                    inherit (projectConfig.tests)
+                      sources
+                      testMain;
+                  });
+
+              plutip-tests =
                 lib.ifEnable
                   (projectConfig ? plutip)
                   (project.runPlutipTest {
@@ -207,9 +253,7 @@ in
                   projectConfig.enableFormatCheck
                   (pkgs.runCommand "formatting-check"
                     {
-                      nativeBuildInputs = [
-                        pkgs.fd
-                      ] ++ commandLineTools;
+                      nativeBuildInputs = commandLineTools;
                     }
                     ''
                       cd ${self}
@@ -224,9 +268,7 @@ in
                   projectConfig.enableJsLintCheck
                   (pkgs.runCommand "js-lint-check"
                     {
-                      nativeBuildInputs = [
-                        pkgs.fd
-                      ] ++ commandLineTools;
+                      nativeBuildInputs = commandLineTools;
                     }
                     ''
                       cd ${self}
@@ -238,19 +280,12 @@ in
             ctlRuntimeConfig = projectConfig.runtime.extraConfig // {
               ctlServer.enable = projectConfig.runtime.enableCtlServer;
             };
-          in
-          {
+          in {
             packages = {
-              web-bundle = project.bundlePursProject {
-                main = projectConfig.bundle.main;
-                entrypoint = projectConfig.bundle.entrypoint;
-              };
-
               ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { };
-            };
+            } // bundles;
 
             inherit checks;
-
             check = utils.combineChecks "combined-checks" checks;
 
             apps = {
