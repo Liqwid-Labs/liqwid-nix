@@ -29,6 +29,11 @@ in
 
           bundle = types.submodule {
             options = {
+              sources = lib.mkOption {
+                description = '' FIXME '';
+                default = [ ];
+              };
+
               main = lib.mkOption {
                 description = '' FIXME '';
                 type = types.path;
@@ -81,6 +86,12 @@ in
                   Added in: 2.0.
                 '';
                 type = types.path;
+              };
+
+              censoredSpagoCodes = lib.mkOption {
+                description = '' FIXME '';
+                default = [ ];
+                type = types.listOf types.string;
               };
 
               shell = lib.mkOption {
@@ -167,15 +178,11 @@ in
 
             project =
               let pkgSet = pkgs.purescriptProject {
-                inherit (projectConfig)
-                  src
-                  packageJSON;
+                inherit (projectConfig) src;
 
                 inherit projectName;
 
-                # FIXME: is it worth exposing these?
-                # packageJSON = ./package.json;
-                # packageLock = ./package-lock.json;
+                censorCodes = projectConfig.censoredSpagoCodes;
 
                 shell = {
                   withRuntime = true;
@@ -190,7 +197,9 @@ in
                 lib.ifEnable
                   (projectConfig ? plutip)
                   (project.runPlutipTest {
-                    inherit (projectConfig.plutip) testMain;
+                    inherit (projectConfig.plutip)
+                      buildInputs
+                      testMain;
                   });
 
               formatting-check =
