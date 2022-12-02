@@ -172,12 +172,13 @@ in
                         scripts);
                   in
                   ''${name})
-                    echo "useage nix run.#${name}"
+                    echo "usage: nix run.#${name}"
                     echo
-                    echo "\"${name}\" group runs following scripts:"
-                    echo "  ${builtins.concatStringsSep "," (builtins.attrNames scripts)}"
+                    echo "The group \"${name}\" runs the following scripts:"
+                    echo "  ${builtins.concatStringsSep ", " (builtins.attrNames scripts)}"
                     echo
-                    echo "Description of each scripts:"
+                    echo "Description of each script:"
+                    echo
                     ${builtins.concatStringsSep "\necho\n" helps}
                   ;;'';
               in
