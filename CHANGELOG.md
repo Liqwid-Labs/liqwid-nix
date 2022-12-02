@@ -2,6 +2,33 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.0.0 -- 2022-11-28
+
+- Rework Nix system into using flake-parts.
+
+  Major differences:
+
+  - Configuring uses modular system, which requires a few more nix files, 
+    but it allows simultaneously having off-chain and on-chain in a single 
+    repository.
+
+  - Most flake inputs are managed inside of liqwid-nix instead of the projects
+    using it. This means that versioning liqwid-nix is a bit more important.
+    This is actually a big improvement, because previously having the inputs
+    controlled by the user of the liqwid-nix library gave the illusion of
+    freedom: Users can change versions at will and so they expect things to
+    work together well, even when rarely this was the case. Now, a single
+    liqwid-nix version will rule them all.
+
+  - Run scripts are slightly different now. `nix run .#help` is useful for
+    looking at them.
+
+- Bumped to Fourmolu 0.9.0.0.
+
+- Plutarch 1.3.0 is enforced for on-chain projects.
+
+- GHC 9.2.4 is encouraged for on-chain projects.
+
 ## 1.1.0 -- 2022-10-24
 
 - Bump fourmolu to 0.8.2.0.

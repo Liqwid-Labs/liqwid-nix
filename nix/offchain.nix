@@ -129,7 +129,8 @@ in
           self.inputs.cardano-transaction-lib.overlays.runtime
         ];
 
-        pkgs = import self.inputs.nixpkgs-ctl {
+        liqwid-nix = self.inputs.liqwid-nix.inputs;
+        pkgs = import liqwid-nix.nixpkgs-ctl {
           inherit system;
           overlays =
             [
@@ -139,15 +140,19 @@ in
             ];
         };
 
-        utils = import ./lib.nix { inherit pkgs lib; };
+        utils = import ./utils.nix { inherit pkgs lib; };
 
         makeProject = projectName: projectConfig:
           let
             defaultCommandLineTools = with pkgs; [
-              nodePackages.eslint
-              nodePackages.prettier
+              dhall
               easy-ps.purs-tidy
+              fd
               nixpkgs-fmt
+              nodePackages.eslint
+              nodePackages.npm
+              nodePackages.prettier
+              nodejs
             ];
 
             commandLineTools =

@@ -1,50 +1,32 @@
 {
-  description = "Example Liqwid Plutarch project";
+  description = "A liqwid-nix Plutarch project";
+
+  nixConfig = {
+    extra-experimental-features = [ "nix-command" "flakes" "ca-derivations" ];
+    extra-substituters = [ "https://cache.iog.io" "https://public-plutonomicon.cachix.org" "https://mlabs.cachix.org" ];
+    extra-trusted-public-keys = [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" "public-plutonomicon.cachix.org-1:3AKJMhCLn32gri1drGuaZmFrmnue+KkKrhhubQk/CWc=" ];
+    allow-import-from-derivation = "true";
+    bash-prompt = "\\[\\e[0m\\][\\[\\e[0;2m\\]liqwid-nix \\e[0;5m\\]2.0 \\[\\e[0;93m\\]\\w\\[\\e[0m\\]]\\[\\e[0m\\]$ \\[\\e[0m\\]";
+    max-jobs = "auto";
+    auto-optimise-store = "true";
+  };
 
   inputs = {
-    flake-parts.url = "github:hercules-ci/flake-parts";
-
-    liqwid-nix.url = "github:Liqwid-Labs/liqwid-nix/liqwid-nix-2.0";
-
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.follows = "liqwid-nix/nixpkgs";
     nixpkgs-latest.url = "github:NixOS/nixpkgs";
-    nixpkgs-2111.url = "github:NixOS/nixpkgs/nixpkgs-21.11-darwin";
-    nixpkgs-2205.follows = "liqwid-nix/nixpkgs-2205";
 
-    iohk-nix.follows = "plutarch/iohk-nix";
-    haskell-nix-extra-hackage.follows = "plutarch/haskell-nix-extra-hackage";
-    haskell-nix.follows = "plutarch/haskell-nix";
-    haskell-language-server.follows = "plutarch/haskell-language-server";
-
-    plutarch = {
-      url = "github:Plutonomicon/plutarch-plutus?ref=master";
-      inputs.emanote.follows =
-        "plutarch/haskell-nix/nixpkgs-unstable";
-      inputs.nixpkgs.follows =
-        "plutarch/haskell-nix/nixpkgs-unstable";
+    liqwid-nix = {
+      url = "github:Liqwid-Labs/liqwid-nix/liqwid-nix-2.0";
+      inputs.nixpkgs-latest.follows = "nixpkgs-latest";
     };
-
-    plutarch-numeric.url =
-      "github:Liqwid-Labs/plutarch-numeric?ref=main";
-    plutarch-safe-money.url =
-      "github:Liqwid-Labs/plutarch-safe-money?ref=main";
-    liqwid-plutarch-extra.url =
-      "github:Liqwid-Labs/liqwid-plutarch-extra?ref=main";
-    plutarch-quickcheck.url =
-      "github:liqwid-labs/plutarch-quickcheck?ref=staging";
-    plutarch-context-builder.url =
-      "github:Liqwid-Labs/plutarch-context-builder?ref=main";
-    liqwid-script-export.url =
-      "github:Liqwid-Labs/liqwid-script-export?ref=main";
   };
 
   outputs = { self, liqwid-nix, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
-      imports = [
-        liqwid-nix.onchain
-        ./onchain
+      imports = liqwid-nix.allModules ++ [
+        ./.
       ];
-      systems = [ "x86_64-linux" "aarch64-darwin" ];
+      systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, system, ... }: { };
     };
 }
