@@ -43,6 +43,12 @@ in
 
           plutip = types.submodule {
             options = {
+              buildInputs = lib.mkOption {
+                type = types.listOf types.package;
+                description = '' FIXME '';
+                default = [ ];
+              };
+
               testMain = lib.mkOption {
                 description = '' FIXME '';
                 type = types.string;
