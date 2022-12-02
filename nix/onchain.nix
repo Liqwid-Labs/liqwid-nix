@@ -28,7 +28,7 @@ in
 
                   Added in: 2.0.
                 '';
-                default = "ghc924";
+                default = "ghc925";
                 type = types.str;
               };
 
