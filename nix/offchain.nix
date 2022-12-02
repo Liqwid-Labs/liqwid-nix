@@ -46,7 +46,7 @@ in
 
               browserRuntime = lib.mkOption {
                 description = '' FIXME '';
-                type= types.bool;
+                type = types.bool;
                 default = true;
               };
 
@@ -70,8 +70,14 @@ in
             };
           };
 
-          plutip = types.submodule {
+          testConfigs = types.submodule {
             options = {
+              sources = lib.mkOption {
+                type = types.listOf types.string;
+                description = '' FIXME '';
+                default = [ ];
+              };
+
               buildInputs = lib.mkOption {
                 type = types.listOf types.package;
                 description = '' FIXME '';
@@ -132,7 +138,13 @@ in
 
               plutip = lib.mkOption {
                 description = '' FIXME '';
-                type = types.nullOr plutip;
+                type = types.nullOr testConfigs;
+                default = null;
+              };
+
+              tests = lib.mkOption {
+                description = '' FIXME '';
+                type = types.nullOr testConfigs;
                 default = null;
               };
 
@@ -202,20 +214,22 @@ in
               ++ projectConfig.shell.extraCommandLineTools;
 
             project =
-              let pkgSet = pkgs.purescriptProject {
-                inherit (projectConfig) src;
+              let
+                pkgSet = pkgs.purescriptProject {
+                  inherit (projectConfig) src;
 
-                inherit projectName;
+                  inherit projectName;
 
-                censorCodes = projectConfig.censoredSpagoCodes;
+                  censorCodes = projectConfig.censoredSpagoCodes;
 
-                shell = {
-                  withRuntime = true;
-                  packageLockOnly = true;
-                  packages = commandLineTools;
+                  shell = {
+                    withRuntime = true;
+                    packageLockOnly = true;
+                    packages = commandLineTools;
+                  };
                 };
-              };
-              in pkgSet;
+              in
+              pkgSet;
 
             bundles = (lib.mapAttrs
               (_: bundle: project.bundlePursProject {
@@ -227,8 +241,8 @@ in
               bundle-checks =
                 utils.flat2With (bundleName: _: bundleName)
                   (lib.mapAttrs (bundleName: _: bundles.${bundleName})
-                  (lib.filterAttrs (_: bundle: bundle.enableCheck)
-                    projectConfig.bundles));
+                    (lib.filterAttrs (_: bundle: bundle.enableCheck)
+                      projectConfig.bundles));
 
               tests =
                 lib.ifEnable
@@ -236,6 +250,7 @@ in
                   (project.runPursTest {
                     inherit (projectConfig.tests)
                       sources
+                      buildInputs
                       testMain;
                   });
 
@@ -244,6 +259,7 @@ in
                   (projectConfig ? plutip)
                   (project.runPlutipTest {
                     inherit (projectConfig.plutip)
+                      sources
                       buildInputs
                       testMain;
                   });
@@ -280,7 +296,8 @@ in
             ctlRuntimeConfig = projectConfig.runtime.extraConfig // {
               ctlServer.enable = projectConfig.runtime.enableCtlServer;
             };
-          in {
+          in
+          {
             packages = {
               ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { };
             } // bundles;
