@@ -174,14 +174,14 @@ in
           let
 
             pkgs-latest = import liqwid-nix.nixpkgs-latest { inherit system; };
-            pkgs2205 = import liqwid-nix.nixpkgs-2205 { inherit system; };
+            pkgs = import liqwid-nix.nixpkgs { inherit system; };
 
             fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
-            applyRefact = pkgs2205.haskell.packages.ghc924.apply-refact_0_10_0_0;
-            hlint = pkgs2205.haskell.packages.ghc924.hlint;
-            nixpkgsFmt = pkgs2205.nixpkgs-fmt;
+            applyRefact = pkgs.haskell.packages.ghc924.apply-refact_0_10_0_0;
+            hlint = pkgs.haskell.packages.ghc924.hlint;
+            nixpkgsFmt = pkgs.nixpkgs-fmt;
             cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
-            hasktags = pkgs2205.haskell.packages.ghc924.hasktags;
+            hasktags = pkgs.haskell.packages.ghc924.hasktags;
 
             ghc = pkgs.haskell.compiler.${projectConfig.ghc.version};
 
@@ -383,8 +383,9 @@ in
               );
 
             haskellFormatCheck =
-              let extStr =
-                builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
+              let
+                extStr =
+                  builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
               in
               lib.ifEnable projectConfig.enableHaskellFormatCheck {
                 haskellFormatCheck = utils.shellCheck
@@ -471,11 +472,14 @@ in
                 '';
               };
             run.haskellLint =
+              let
+                arguments = builtins.concatStringsSep " " (builtins.map (extension: " -X" + extension) projectConfig.ghc.extensions);
+              in
               {
                 dependencies = [ hlint ];
                 script = ''
                   # shellcheck disable=SC2046
-                  hlint -XQuasiQuotes ${haskellSources}
+                  hlint ${arguments} ${haskellSources}
                 '';
                 groups = [ "lint" "precommit" ];
                 help = ''
@@ -532,3 +536,4 @@ in
       };
   };
 }
+

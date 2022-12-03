@@ -16,29 +16,30 @@ in
   options = {
     perSystem = mkPerSystemOption
       ({ config, self', inputs', pkgs, system, ... }:
-        let ci = types.submodule
-          {
-            options = {
-              required = lib.mkOption {
-                description = ''
-                  The checks that CI must run, expressed as keys of the `checks.<system>` attribute list.
+        let
+          ci = types.submodule
+            {
+              options = {
+                required = lib.mkOption {
+                  description = ''
+                    The checks that CI must run, expressed as keys of the `checks.<system>` attribute list.
 
-                  Added in: 2.0.
-                '';
-                default = [ ];
-                type = types.listOf types.str;
-              };
-              addRunScript = lib.mkOption {
-                description = ''
-                  Whether or not to add a helpful run script that just builds `checks.<system>.required`.
+                    Added in: 2.0.
+                  '';
+                  default = [ ];
+                  type = types.listOf types.str;
+                };
+                addRunScript = lib.mkOption {
+                  description = ''
+                    Whether or not to add a helpful run script that just builds `checks.<system>.required`.
 
-                  Added in: 2.0.
-                '';
-                default = true;
-                type = types.bool;
+                    Added in: 2.0.
+                  '';
+                  default = true;
+                  type = types.bool;
+                };
               };
             };
-          };
         in
         {
           options.ci = lib.mkOption {

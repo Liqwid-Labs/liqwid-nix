@@ -1302,7 +1302,7 @@
         "nixpkgs-2003": "nixpkgs-2003_2",
         "nixpkgs-2105": "nixpkgs-2105_2",
         "nixpkgs-2111": "nixpkgs-2111_2",
-        "nixpkgs-2205": "nixpkgs-2205_3",
+        "nixpkgs-2205": "nixpkgs-2205_2",
         "nixpkgs-unstable": "nixpkgs-unstable_2",
         "old-ghc-nix": "old-ghc-nix_2",
         "stackage": "stackage_2"
@@ -1348,7 +1348,7 @@
         "nixpkgs-2003": "nixpkgs-2003_3",
         "nixpkgs-2105": "nixpkgs-2105_3",
         "nixpkgs-2111": "nixpkgs-2111_3",
-        "nixpkgs-2205": "nixpkgs-2205_4",
+        "nixpkgs-2205": "nixpkgs-2205_3",
         "nixpkgs-unstable": "nixpkgs-unstable_3",
         "old-ghc-nix": "old-ghc-nix_3",
         "stackage": "stackage_3"
@@ -2200,22 +2200,6 @@
     },
     "nixpkgs-2205_2": {
       "locked": {
-        "lastModified": 1669677308,
-        "narHash": "sha256-n788Cx+W6J1CtQofJD/KUY1c2WcJx6GqyJ+++1y9B3k=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "f214b8c9455e90b70bafd4ed9a58d448c243e8bb",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-22.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs-2205_3": {
-      "locked": {
         "lastModified": 1663981975,
         "narHash": "sha256-TKaxWAVJR+a5JJauKZqibmaM5e/Pi5tBDx9s8fl/kSE=",
         "owner": "NixOS",
@@ -2230,7 +2214,7 @@
         "type": "github"
       }
     },
-    "nixpkgs-2205_4": {
+    "nixpkgs-2205_3": {
       "locked": {
         "lastModified": 1663981975,
         "narHash": "sha256-TKaxWAVJR+a5JJauKZqibmaM5e/Pi5tBDx9s8fl/kSE=",
@@ -2599,16 +2583,16 @@
         "tooling": "tooling"
       },
       "locked": {
-        "lastModified": 1669649960,
+        "lastModified": 1670045459,
         "narHash": "sha256-WrOPEZ1s9Yuc2sLH6avqM8lBS8rVIQ6GOYCgZ+Azr4s=",
         "owner": "Plutonomicon",
         "repo": "plutarch-plutus",
-        "rev": "28c2490fd90cd4714021a6665f87b6b2532b2905",
+        "rev": "01a67f56b2bf428538e92ed9ada0ce88d90ab636",
         "type": "github"
       },
       "original": {
         "owner": "Plutonomicon",
-        "ref": "emiflake/export-script-constructor",
+        "ref": "master",
         "repo": "plutarch-plutus",
         "type": "github"
       }
@@ -2684,7 +2668,6 @@
           "haskell-nix",
           "nixpkgs-unstable"
         ],
-        "nixpkgs-2205": "nixpkgs-2205_2",
         "nixpkgs-latest": "nixpkgs-latest",
         "plutarch": "plutarch"
       }

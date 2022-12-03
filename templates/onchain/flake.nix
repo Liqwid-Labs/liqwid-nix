@@ -38,15 +38,7 @@
                   ghc.version = "ghc925";
                   shell = { };
                   enableBuildChecks = true;
-                  extraHackageDeps = [
-                    "${self.inputs.plutarch-numeric}"
-                    "${self.inputs.plutarch-quickcheck}"
-                    "${self.inputs.plutarch-context-builder}"
-                    "${self.inputs.liqwid-plutarch-extra}"
-                    "${self.inputs.liqwid-script-export}"
-                    "${self.inputs.liqwid-script-export.inputs.ply}/ply-core"
-                    "${self.inputs.liqwid-script-export.inputs.ply}/ply-plutarch"
-                  ];
+                  extraHackageDeps = [ ];
                 };
                 ci.required = [ "all_onchain" ];
               };
