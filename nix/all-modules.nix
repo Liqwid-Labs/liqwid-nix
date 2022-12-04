@@ -2,6 +2,7 @@
 let
   # Which modules do we want to expose to consumers of liqwid-nix.
   exposedModules = {
+    haskell = ./haskell.nix;
     onchain = ./onchain.nix;
     run = ./run/default.nix;
     ci = ./ci.nix;
@@ -14,4 +15,3 @@ in
     } // exposedModules;
   };
 }
-

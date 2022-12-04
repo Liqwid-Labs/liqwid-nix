@@ -1,0 +1,444 @@
+# TODO: on-chain Plutarch project configuration module.
+{ self, config, lib, flake-parts-lib, ... }:
+let
+  inherit (flake-parts-lib)
+    mkSubmoduleOptions
+    mkPerSystemOption;
+  inherit (lib)
+    mkOption
+    mkDefault
+    types;
+  inherit (types)
+    functionTo
+    raw;
+
+in
+{
+  options = {
+    perSystem = mkPerSystemOption
+      ({ config, self', inputs', pkgs, system, ... }:
+        let
+          ghc = types.submodule {
+            options = {
+              version = lib.mkOption {
+                description = ''
+                  The version name of GHC to use.
+
+                  Examples: ghc923, ghc925, ghc8107.
+
+                  Added in: 2.1.0.
+                '';
+                default = "ghc925";
+                type = types.str;
+              };
+
+              extensions = lib.mkOption {
+                type = types.listOf types.str;
+                default = [
+                  "QuasiQuotes"
+                  "TemplateHaskell"
+                  "TypeApplications"
+                  "ImportQualifiedPost"
+                  "PatternSynonyms"
+                  "OverloadedRecordDot"
+                ];
+                description = ''
+                  The list of extensions to use with the project.
+                  List them out without the '-X' prefix.
+
+                  Example: [ "TypeApplications" "QualifiedDo" ]
+
+                  Added in: 2.1.0.
+                '';
+              };
+            };
+          };
+
+          shell = types.submodule {
+            options = {
+              extraCommandLineTools = lib.mkOption {
+                type = types.listOf types.package;
+                description = ''
+                  List of extra packages to make available to the shell.
+
+                  Added in: 2.1.0.
+                '';
+                default = [ ];
+              };
+            };
+          };
+
+          project = types.submodule {
+            options = {
+              src = lib.mkOption {
+                description = ''
+                  The source code of the project
+
+                  Added in: 2.1.0.
+                '';
+                type = types.path;
+              };
+              ghc = lib.mkOption {
+                description = ''
+                  GHC-related options for the on-chain build.
+
+                  Added in: 2.1.0.
+                '';
+                type = ghc;
+              };
+
+              shell = lib.mkOption {
+                description = ''
+                  Options for the dev shell.
+
+                  Added in: 2.1.0.
+                '';
+                type = shell;
+              };
+
+              enableHaskellFormatCheck = lib.mkOption {
+                type = types.bool;
+                default = true;
+                description = ''
+                  Whether or not to check for Haskell formatting correctness.
+
+                  This will use the Haskell extensions configured in `ghc.extensions`.
+
+                  Added in: 2.1.0.
+                '';
+              };
+
+              enableCabalFormatCheck = lib.mkOption {
+                type = types.bool;
+                default = true;
+                description = ''
+                  Whether or not to check for Cabal formatting correctness.
+
+                  Added in: 2.1.0.
+                '';
+              };
+
+              enableBuildChecks = lib.mkOption {
+                type = types.bool;
+                default = true;
+                description = ''
+                  Whether or not to enable adding the package builds to checks.
+
+                  This is useful if you want to ensure package builds which are not tested by any tests.
+
+                  Added in: 2.1.0.
+                '';
+              };
+
+              extraHackageDeps = lib.mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = ''
+                  List of packages to add to the hackage provided to haskell.nix.
+
+                  These are packages that are not available on the public hackage and are
+                  manually sourced by your inputs.
+
+                  Added in: 2.1.0.
+                '';
+              };
+
+            };
+          };
+        in
+        {
+          options.haskell = lib.mkOption {
+            description = "On-chain project declaration";
+            type = types.attrsOf project;
+          };
+        });
+  };
+  config = {
+    perSystem = { config, self', inputs', pkgs, system, ... }:
+      let
+        liqwid-nix = self.inputs.liqwid-nix.inputs;
+
+        pkgs = import liqwid-nix.nixpkgs {
+          inherit system;
+          overlays =
+            [
+              liqwid-nix.haskell-nix.overlay
+              (import "${liqwid-nix.iohk-nix}/overlays/crypto")
+            ];
+        };
+
+        inherit (pkgs) haskell-nix;
+
+        utils = import ./utils.nix { inherit pkgs lib; };
+        hackageUtils = import ./mk-hackage.nix { inherit liqwid-nix system pkgs lib; };
+        makeProject = projectName: projectConfig:
+          let
+
+            pkgs-latest = import liqwid-nix.nixpkgs-latest { inherit system; };
+            pkgs = import liqwid-nix.nixpkgs { inherit system; };
+
+            fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
+            applyRefact = pkgs.haskell.packages.ghc924.apply-refact_0_10_0_0;
+            hlint = pkgs.haskell.packages.ghc924.hlint;
+            nixpkgsFmt = pkgs.nixpkgs-fmt;
+            cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
+            hasktags = pkgs.haskell.packages.ghc924.hasktags;
+
+            ghc = pkgs.haskell.compiler.${projectConfig.ghc.version};
+
+            nonReinstallablePkgs = [
+              "array"
+              "array"
+              "base"
+              "binary"
+              "bytestring"
+              "Cabal"
+              "containers"
+              "deepseq"
+              "directory"
+              "exceptions"
+              "filepath"
+              "ghc"
+              "ghc-bignum"
+              "ghc-boot"
+              "ghc-boot"
+              "ghc-boot-th"
+              "ghc-compact"
+              "ghc-heap"
+              "ghcjs-prim"
+              "ghcjs-th"
+              "ghc-prim"
+              "ghc-prim"
+              "hpc"
+              "integer-gmp"
+              "integer-simple"
+              "mtl"
+              "parsec"
+              "pretty"
+              "process"
+              "rts"
+              "stm"
+              "template-haskell"
+              "terminfo"
+              "text"
+              "time"
+              "transformers"
+              "unix"
+              "Win32"
+              "xhtml"
+            ];
+
+            hackageDeps = [
+              "${liqwid-nix.plutarch}"
+              "${liqwid-nix.plutarch}/plutarch-extra"
+            ] ++ projectConfig.extraHackageDeps;
+
+            customHackages =
+              hackageUtils.mkHackage
+                projectConfig.ghc.version
+                hackageDeps;
+
+            commandLineTools =
+              [
+                pkgs-latest.cabal-install
+                cabalFmt
+                fourmolu
+                nixpkgsFmt
+                hasktags
+                pkgs-latest.fd
+                pkgs-latest.entr
+                applyRefact
+              ] ++ projectConfig.shell.extraCommandLineTools;
+
+            project =
+              let
+                hackages = customHackages;
+                pkgSet = haskell-nix.cabalProject' {
+                  inherit (projectConfig) src;
+                  compiler-nix-name = projectConfig.ghc.version;
+                  shell = {
+                    withHoogle = true;
+                    exactDeps = true;
+                    tools = {
+                      hlint = { };
+                      haskell-language-server = { };
+                    };
+                    nativeBuildInputs = commandLineTools;
+                    shellHook = ''
+                      liqwid(){ c=$1; shift; nix run .#$c -- $@; }
+                    '';
+                  };
+
+                  modules = hackages.modules;
+                  extra-hackages = hackages.extra-hackages;
+                  extra-hackage-tarballs = hackages.extra-hackage-tarballs;
+                };
+              in
+              pkgSet;
+
+            flake = project.flake { };
+
+            buildChecks =
+              lib.ifEnable projectConfig.enableBuildChecks (
+                pkgs-latest.lib.mapAttrs'
+                  (name: value: {
+                    name = "build:" + name;
+                    inherit value;
+                  })
+                  flake.packages
+              );
+
+            haskellFormatCheck =
+              let
+                extStr =
+                  builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
+              in
+              lib.ifEnable projectConfig.enableHaskellFormatCheck {
+                haskellFormatCheck = utils.shellCheck
+                  "haskellFormatCheck"
+                  projectConfig.src
+                  {
+                    nativeBuildInputs = [ fourmolu ];
+                  }
+                  ''
+                    find -name '*.hs' \
+                      -not -path './dist*/*' \
+                      -not -path './haddock/*' \
+                        | xargs fourmolu ${extStr} -m check
+                  '';
+              };
+
+            cabalFormatCheck =
+              lib.ifEnable projectConfig.enableCabalFormatCheck
+                {
+                  cabalFormatCheck = utils.shellCheck
+                    "cabalFormatCheck"
+                    projectConfig.src
+                    {
+                      nativeBuildInputs = [ cabalFmt ];
+                    }
+                    ''
+                      find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
+                    '';
+                };
+
+            checks =
+              lib.fold lib.mergeAttrs { }
+                [
+                  flake.checks
+                  buildChecks
+                  haskellFormatCheck
+                  cabalFormatCheck
+                ];
+
+            haskellSources = "$(git ls-tree -r HEAD --full-tree --name-only | grep '.\\+\\.hs')";
+            cabalSources = "$(git ls-tree -r HEAD --full-tree --name-only | grep '.\\+\\.cabal')";
+          in
+          {
+            devShell = flake.devShell;
+
+            inherit checks;
+
+            check = utils.combineChecks "combined-checks" checks;
+
+            run.nixFormat =
+              {
+                dependencies = [ nixpkgsFmt ];
+                script = ''
+                  find . -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' -exec nixpkgs-fmt {} +
+                '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Formats nix files using nixpkgs-fmt."
+                '';
+              };
+            run.haskellFormat =
+              let
+                arguments = builtins.concatStringsSep " " (builtins.map (extension: "-o -X" + extension) projectConfig.ghc.extensions);
+              in
+              {
+                dependencies = [ fourmolu cabalFmt ];
+                script = ''
+                  # shellcheck disable=SC2046
+                  fourmolu ${arguments} -m inplace ${haskellSources}
+                  # shellcheck disable=SC2046
+                  cabal-fmt -i ${cabalSources}
+                '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Runs fourmolu and cabal-fmt."
+                  echo
+                  echo "  fourmolu: A formatter for Haskell source code."
+                  echo "  cabal-fmt: Format .cabal files preserving the original field ordering, and comments."
+                  echo
+                  echo "  Fourmolu is using the following Haskell extensions:"
+                  echo "${builtins.concatStringsSep "\n" (builtins.map (p: "  - " + p) projectConfig.ghc.extensions)}"
+                  echo
+                  echo "  NOTE: You can change these in the flake module!"
+                '';
+              };
+            run.haskellLint =
+              let
+                arguments = builtins.concatStringsSep " " (builtins.map (extension: " -X" + extension) projectConfig.ghc.extensions);
+              in
+              {
+                dependencies = [ hlint ];
+                script = ''
+                  # shellcheck disable=SC2046
+                  hlint ${arguments} ${haskellSources}
+                '';
+                groups = [ "lint" "precommit" ];
+                help = ''
+                  echo "  hlint: HLint gives hints on how to improve Haskell code."
+                '';
+              };
+            run.hasktags =
+              {
+                dependencies = [ hasktags ];
+                script = ''
+                  hasktags -x ${haskellSources}
+                '';
+                help = ''
+                  echo '  hasktags: Produces ctags "tags" and etags "TAGS" files for Haskell programs.'
+                '';
+              };
+            run.hoogle =
+              {
+                dependencies = project.shell.nativeBuildInputs;
+                script = ''
+                  hoogle server --local -p 8080 >/dev/null
+                '';
+                help = ''
+                  echo '  Run a hoogle server with the local packages on port 8080.'
+                '';
+              };
+          };
+
+        projects = lib.mapAttrs makeProject config.haskell;
+
+        projectChecks =
+          utils.flat2With (project: check: project + "_" + check)
+            (lib.mapAttrs
+              (_: project: project.checks // { all = project.check; })
+              projects);
+
+        projectScripts =
+          utils.flat2With (project: script: if project == "default" then script else project + "_" + script)
+            (lib.mapAttrs
+              (_: project: project.run)
+              projects);
+      in
+      {
+        devShells =
+          lib.mapAttrs
+            (_: project: project.devShell)
+            projects;
+
+        run = projectScripts;
+
+        checks = projectChecks // {
+          all_haskell = utils.combineChecks "all_haskell" projectChecks;
+        };
+      };
+  };
+}
