@@ -26,7 +26,7 @@ in
 
                   Examples: ghc923, ghc925, ghc8107.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 default = "ghc925";
                 type = types.str;
@@ -48,7 +48,7 @@ in
 
                   Example: [ "TypeApplications" "QualifiedDo" ]
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
             };
@@ -61,7 +61,7 @@ in
                 description = ''
                   List of extra packages to make available to the shell.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 default = [ ];
               };
@@ -74,7 +74,7 @@ in
                 description = ''
                   The source code of the project
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 type = types.path;
               };
@@ -82,7 +82,7 @@ in
                 description = ''
                   GHC-related options for the on-chain build.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 type = ghc;
               };
@@ -91,7 +91,7 @@ in
                 description = ''
                   Options for the dev shell.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 type = shell;
               };
@@ -104,7 +104,7 @@ in
 
                   This will use the Haskell extensions configured in `ghc.extensions`.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -114,7 +114,7 @@ in
                 description = ''
                   Whether or not to check for Cabal formatting correctness.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -126,7 +126,7 @@ in
 
                   This is useful if you want to ensure package builds which are not tested by any tests.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -139,7 +139,7 @@ in
                   These are packages that are not available on the public hackage and are
                   manually sourced by your inputs.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 

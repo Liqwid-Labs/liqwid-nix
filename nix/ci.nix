@@ -24,7 +24,7 @@ in
                   description = ''
                     The checks that CI must run, expressed as keys of the `checks.<system>` attribute list.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   default = [ ];
                   type = types.listOf types.str;
@@ -33,7 +33,7 @@ in
                   description = ''
                     Whether or not to add a helpful run script that just builds `checks.<system>.required`.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   default = true;
                   type = types.bool;
@@ -49,7 +49,7 @@ in
               This module will expose the `required` check, if checks are provided. This
               can be used in the VCS as a pre-merge requirement for PRs.
 
-              Added in: 2.0.
+              Added in: 2.0.0.
             '';
             default = { };
             type = ci;
