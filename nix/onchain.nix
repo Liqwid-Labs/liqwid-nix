@@ -26,7 +26,7 @@ in
 
                   Examples: ghc923, ghc924, ghc8107.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 default = "ghc924";
                 type = types.str;
@@ -48,7 +48,7 @@ in
 
                   Example: [ "TypeApplications" "QualifiedDo" ]
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
             };
@@ -61,7 +61,7 @@ in
                 description = ''
                   List of extra packages to make available to the shell.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 default = [ ];
               };
@@ -74,7 +74,7 @@ in
                 description = ''
                   The source code of the project
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 type = types.path;
               };
@@ -82,7 +82,7 @@ in
                 description = ''
                   GHC-related options for the on-chain build.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 type = ghc;
               };
@@ -91,7 +91,7 @@ in
                 description = ''
                   Options for the dev shell.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
                 type = shell;
               };
@@ -104,7 +104,7 @@ in
 
                   This will use the Haskell extensions configured in `ghc.extensions`.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -114,7 +114,7 @@ in
                 description = ''
                   Whether or not to check for Cabal formatting correctness.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -126,7 +126,7 @@ in
 
                   This is useful if you want to ensure package builds which are not tested by any tests.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -139,7 +139,7 @@ in
                   These are packages that are not available on the public hackage and are
                   manually sourced by your inputs.
 
-                  Added in: 2.0.
+                  Added in: 2.0.0.
                 '';
               };
 
@@ -174,14 +174,14 @@ in
           let
 
             pkgs-latest = import liqwid-nix.nixpkgs-latest { inherit system; };
-            pkgs2205 = import liqwid-nix.nixpkgs-2205 { inherit system; };
+            pkgs = import liqwid-nix.nixpkgs { inherit system; };
 
             fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
-            applyRefact = pkgs2205.haskell.packages.ghc924.apply-refact_0_10_0_0;
-            hlint = pkgs2205.haskell.packages.ghc924.hlint;
-            nixpkgsFmt = pkgs2205.nixpkgs-fmt;
+            applyRefact = pkgs.haskell.packages.ghc924.apply-refact_0_10_0_0;
+            hlint = pkgs.haskell.packages.ghc924.hlint;
+            nixpkgsFmt = pkgs.nixpkgs-fmt;
             cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
-            hasktags = pkgs2205.haskell.packages.ghc924.hasktags;
+            hasktags = pkgs.haskell.packages.ghc924.hasktags;
 
             ghc = pkgs.haskell.compiler.${projectConfig.ghc.version};
 
@@ -383,8 +383,9 @@ in
               );
 
             haskellFormatCheck =
-              let extStr =
-                builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
+              let
+                extStr =
+                  builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
               in
               lib.ifEnable projectConfig.enableHaskellFormatCheck {
                 haskellFormatCheck = utils.shellCheck
@@ -471,11 +472,14 @@ in
                 '';
               };
             run.haskellLint =
+              let
+                arguments = builtins.concatStringsSep " " (builtins.map (extension: " -X" + extension) projectConfig.ghc.extensions);
+              in
               {
                 dependencies = [ hlint ];
                 script = ''
                   # shellcheck disable=SC2046
-                  hlint -XQuasiQuotes ${haskellSources}
+                  hlint ${arguments} ${haskellSources}
                 '';
                 groups = [ "lint" "precommit" ];
                 help = ''
@@ -532,3 +536,4 @@ in
       };
   };
 }
+

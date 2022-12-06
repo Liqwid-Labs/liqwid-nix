@@ -24,7 +24,7 @@ in
                   description = ''
                     The dependencies to include in the script's environment.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   type = types.listOf types.package;
                   default = [ ];
@@ -33,7 +33,7 @@ in
                   description = ''
                     The script to run.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   type = types.str;
                   default = "echo UNIMPLEMENTED RUN SCRIPT";
@@ -42,7 +42,7 @@ in
                   description = ''
                     Whether this script should also be a check.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   type = types.bool;
                   default = false;
@@ -53,7 +53,7 @@ in
 
                     These groups will be aliases to all of the scripts that tagged them.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   type = types.listOf types.str;
                   default = [ ];
@@ -62,7 +62,7 @@ in
                   description = ''
                     Help message to provide when using `nix run .#help -- <name>`.
 
-                    Added in: 2.0.
+                    Added in: 2.0.0.
                   '';
                   type = types.str;
                   default = "No help provided.";
@@ -77,7 +77,7 @@ in
 
               These are intended to replace makefiles.
 
-              Added in: 2.0.
+              Added in: 2.0.0.
             '';
             type = types.attrsOf runScript;
             default = { };
