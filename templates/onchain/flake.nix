@@ -23,7 +23,9 @@
 
   outputs = { self, liqwid-nix, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
-      imports = liqwid-nix.allModules ++ [
+      imports = [
+        liqwid-nix.onchain
+        liqwid-nix.run
         ./.
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];

@@ -24,7 +24,7 @@ in
                 description = ''
                   The version name of GHC to use.
 
-                  Examples: ghc923, ghc925, ghc8107.
+                  Examples: ghc923, ghc924, ghc8107.
 
                   Added in: 2.0.
                 '';
@@ -438,7 +438,7 @@ in
               {
                 dependencies = [ nixpkgsFmt ];
                 script = ''
-                  find . -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' -exec nixpkgs-fmt {} +
+                  find . -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' -exec nixpkgs-fmt {} +                
                 '';
                 groups = [ "format" "precommit" ];
                 help = ''
@@ -460,10 +460,10 @@ in
                 groups = [ "format" "precommit" ];
                 help = ''
                   echo "  Runs fourmolu and cabal-fmt."
-                  echo
+                  echo 
                   echo "  fourmolu: A formatter for Haskell source code."
                   echo "  cabal-fmt: Format .cabal files preserving the original field ordering, and comments."
-                  echo
+                  echo 
                   echo "  Fourmolu is using the following Haskell extensions:"
                   echo "${builtins.concatStringsSep "\n" (builtins.map (p: "  - " + p) projectConfig.ghc.extensions)}"
                   echo
@@ -496,7 +496,7 @@ in
               {
                 dependencies = project.shell.nativeBuildInputs;
                 script = ''
-                  hoogle server --local -p 8080 >/dev/null
+                  hoogle server --local -p 8080 >/dev/null 
                 '';
                 help = ''
                   echo '  Run a hoogle server with the local packages on port 8080.'

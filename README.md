@@ -12,8 +12,10 @@ This repository exposes nix templates that you can use to bootstrap your project
 
 Use the following command to initialize a project using liqwid-nix:
 ```sh
-nix flake init -t github:Liqwid-Labs/liqwid-nix/liqwid-nix-2.0
+nix flake init -t github:Liqwid-Labs/liqwid-nix/main
 ```
+
+In the case that there already is a `flake.nix` file, you must remove it or the template will refuse to be applied.
 
 ### Run scripts
 

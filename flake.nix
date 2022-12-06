@@ -12,10 +12,13 @@
   };
 
   inputs = {
-    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs?rev=334ec8b503c3981e37a04b817a70e8d026ea9e84";
     nixpkgs-latest.url = "github:NixOS/nixpkgs";
     nixpkgs-2205.url = "github:NixOS/nixpkgs/nixos-22.05";
-    nixpkgs-ctl.follows = "cardano-transaction-lib/nixpkgs";
+
+    # temporary fix for nix versions that have the transitive follows bug
+    # see https://github.com/NixOS/nix/issues/6013
+    nixpkgs-2111.url = "github:NixOS/nixpkgs/nixpkgs-21.11-darwin";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
 
@@ -23,7 +26,7 @@
     haskell-nix-extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage";
     haskell-nix-extra-hackage.inputs.haskell-nix.follows = "haskell-nix";
     haskell-nix-extra-hackage.inputs.nixpkgs.follows = "nixpkgs";
-    haskell-nix.url = "github:input-output-hk/haskell.nix?rev=cbf1e918b6e278a81c385155605b8504e498efef";
+    haskell-nix.url = "github:input-output-hk/haskell.nix?rev=5eccdb523ce665f713f3c270aa8f45c23cc659c2";
     iohk-nix.url = "github:input-output-hk/iohk-nix/4848df60660e21fbb3fe157d996a8bac0a9cf2d6";
     iohk-nix.flake = false;
 
@@ -32,16 +35,17 @@
 
     haskell-language-server.url = "github:haskell/haskell-language-server";
     haskell-language-server.flake = false;
+    # Plutarch and its friends
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=emiflake/export-script-constructor";
+
+    # CTL
     cardano-transaction-lib.url = "github:Plutonomicon/cardano-transaction-lib/develop";
+    nixpkgs-ctl.follows = "cardano-transaction-lib/nixpkgs";
   };
 
   outputs = { self, nixpkgs-2205, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
-      imports = [
-        ./nix/templates.nix
-        ./nix/all-modules.nix
-      ];
+      imports = [ ./nix/templates.nix ./nix/all-modules.nix ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, lib, system, ... }:
         let
@@ -50,7 +54,7 @@
         in
         {
           devShells.default = pkgs.mkShell {
-            name = "liqwid-nix-dev-shell";
+            name = "liqwid-nix dev shell";
             buildInputs = [
               pkgs2205.nixpkgs-fmt
             ];
