@@ -27,6 +27,10 @@ in
             };
           };
 
+          purescriptModule =
+            types.strMatching
+            ''[[:upper:]][[:alnum:]]*(\.[[:upper:]][[:alnum:]]*)*'';
+
           bundle = types.submodule {
             options = {
               sources = lib.mkOption {
@@ -34,14 +38,23 @@ in
                 default = [ ];
               };
 
-              main = lib.mkOption {
+              buildInputs = lib.mkOption {
                 description = '' FIXME '';
-                type = types.path;
+                default = [ ];
               };
 
-              entrypoint = lib.mkOption {
+              mainModule = lib.mkOption {
                 description = '' FIXME '';
-                type = types.path;
+                type = purescriptModule;
+              };
+
+              entrypointJs = lib.mkOption {
+                description = '' FIXME '';
+
+                # NOTE: ideally, this would be a types.path, but it's easier to
+                # conform to CTL's types.
+                type = types.str;
+                default = "index.js";
               };
 
               browserRuntime = lib.mkOption {
@@ -52,13 +65,13 @@ in
 
               webpackConfig = lib.mkOption {
                 description = '' FIXME '';
-                type = types.string;
+                type = types.str;
                 default = "webpack.config.js";
               };
 
               bundledModuleName = lib.mkOption {
                 description = '' FIXME '';
-                type = types.string;
+                type = types.str;
                 default = "output.js";
               };
 
@@ -73,7 +86,7 @@ in
           testConfigs = types.submodule {
             options = {
               sources = lib.mkOption {
-                type = types.listOf types.string;
+                type = types.listOf types.str;
                 description = '' FIXME '';
                 default = [ ];
               };
@@ -86,7 +99,7 @@ in
 
               testMain = lib.mkOption {
                 description = '' FIXME '';
-                type = types.string;
+                type = purescriptModule;
               };
             };
           };
@@ -101,7 +114,7 @@ in
 
               extraConfig = lib.mkOption {
                 description = '' FIXME '';
-                type = types.attrs;
+                type = types.attrsOf types.anything;
                 default = { };
               };
             };
@@ -121,7 +134,7 @@ in
               censoredSpagoCodes = lib.mkOption {
                 description = '' FIXME '';
                 default = [ ];
-                type = types.listOf types.string;
+                type = types.listOf types.str;
               };
 
               shell = lib.mkOption {
@@ -233,7 +246,14 @@ in
 
             bundles = (lib.mapAttrs
               (_: bundle: project.bundlePursProject {
-                inherit (bundle) main entrypoint;
+                inherit (bundle)
+                  buildInputs
+                  bundledModuleName
+                  sources
+                  webpackConfig;
+
+                main = bundle.mainModule;
+                entrypoint = bundle.entrypointJs;
               })
               projectConfig.bundles);
 
