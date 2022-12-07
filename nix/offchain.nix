@@ -132,7 +132,8 @@ in
               enableCtlServer = lib.mkOption {
                 description = ''
                   Whether to enable or disable the CTL server (used to apply
-                  arguments to scripts and evaluate UPLC).
+                  arguments to scripts and evaluate UPLC). Enabling this will
+                  also add the ctl-server overlay.
 
                   Added in: 2.1
                 '';
@@ -145,6 +146,9 @@ in
                   Additional config options to pass to the CTL runtime. See
                   `runtime.nix` in the CTL flake for a reference of the
                   available options.
+
+                  By default, the runtime is set to use the `preview` network
+                  and the same node version that CTL uses in its tests.
 
                   Added in: 2.1
                 '';
@@ -268,20 +272,28 @@ in
   config = {
     perSystem = { config, self', inputs', lib, system, ... }:
       let
-        defaultCtlOverlays = [
-          self.inputs.cardano-transaction-lib.overlays.purescript
-          self.inputs.cardano-transaction-lib.overlays.runtime
+        liqwid-nix = self.inputs.liqwid-nix.inputs;
+        ctl-overlays = self.inputs.cardano-transaction-lib.overlays;
+        projectConfigs = config.offchain;
+
+        defaultCtlOverlays = with ctl-overlays; [
+          purescript
+          runtime
         ];
 
-        liqwid-nix = self.inputs.liqwid-nix.inputs;
+        includeCtlServer =
+          lib.any
+            (project: project.runtime.enableCtlServer)
+            (lib.attrValues projectConfigs);
+
+        additionalOverlays =
+          if includeCtlServer
+          then [ ctl-overlays.ctl-server ]
+          else [ ];
+
         pkgs = import liqwid-nix.nixpkgs-ctl {
           inherit system;
-          overlays =
-            [
-              self.inputs.cardano-transaction-lib.overlays.purescript
-              self.inputs.cardano-transaction-lib.overlays.runtime
-              self.inputs.cardano-transaction-lib.overlays.ctl-server
-            ];
+          overlays = defaultCtlOverlays ++ additionalOverlays;
         };
 
         utils = import ./utils.nix { inherit pkgs lib; };
@@ -343,7 +355,10 @@ in
                   (_: projectBundle: projectBundle.enableCheck)
                   projectConfig.bundles);
 
-            checks = bundle-checks // {
+            checks = {
+              bundle-checks =
+                utils.combineChecks "bundle-checks" bundleChecks;
+
               tests =
                 lib.ifEnable
                   (projectConfig ? tests)
@@ -413,7 +428,7 @@ in
             devShell = project.devShell;
           };
 
-        projects = lib.mapAttrs makeProject config.offchain;
+        projects = lib.mapAttrs makeProject projectConfigs;
 
         projectChecks =
           lib.filterAttrs (_: check: check != { })
