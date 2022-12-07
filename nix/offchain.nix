@@ -275,6 +275,7 @@ in
         liqwid-nix = self.inputs.liqwid-nix.inputs;
         ctl-overlays = self.inputs.cardano-transaction-lib.overlays;
         projectConfigs = config.offchain;
+        utils = import ./utils.nix { inherit pkgs lib; };
 
         defaultCtlOverlays = with ctl-overlays; [
           purescript
@@ -296,7 +297,7 @@ in
           overlays = defaultCtlOverlays ++ additionalOverlays;
         };
 
-        utils = import ./utils.nix { inherit pkgs lib; };
+        # ----------------------------------------------------------------------
 
         makeProject = projectName: projectConfig:
           let
@@ -427,6 +428,8 @@ in
 
             devShell = project.devShell;
           };
+
+        # ----------------------------------------------------------------------
 
         projects = lib.mapAttrs makeProject projectConfigs;
 

@@ -19,7 +19,7 @@
     flake-parts.lib.mkFlake { inherit self; } {
       imports = [
         liqwid-nix.onchain
-        ./offchain
+        ./.
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }: { };
