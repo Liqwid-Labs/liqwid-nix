@@ -20,36 +20,37 @@ in
                 description = ''
                   List of extra packages to make available to the shell.
 
-                  Added in: 2.0.
+                  Added in: 2.1.
                 '';
                 default = [ ];
               };
             };
           };
 
+          # NOTE: probably a simple types.str would be enough here, but we want
+          # to differentiate this kind of string from stringified paths, which
+          # is what most of CTL's flake takes as input.
           purescriptModule =
             types.strMatching
             ''[[:upper:]][[:alnum:]]*(\.[[:upper:]][[:alnum:]]*)*'';
 
           bundle = types.submodule {
             options = {
-              sources = lib.mkOption {
-                description = '' FIXME '';
-                default = [ ];
-              };
-
-              buildInputs = lib.mkOption {
-                description = '' FIXME '';
-                default = [ ];
-              };
-
               mainModule = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  The main Purescript module for the bundle (for instance, 'Main').
+
+                  Added in: 2.1
+                '';
                 type = purescriptModule;
               };
 
               entrypointJs = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Stringified path to the webpack `entrypoint` file.
+
+                  Added in: 2.1
+                '';
 
                 # NOTE: ideally, this would be a types.path, but it's easier to
                 # conform to CTL's types.
@@ -58,25 +59,44 @@ in
               };
 
               browserRuntime = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Whether this bundle is being produced for a browser environment or
+                  not.
+
+                  Added in: 2.1
+                '';
                 type = types.bool;
                 default = true;
               };
 
               webpackConfig = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Stringified path to the Webpack config file to use.
+
+                  Added in: 2.1
+                '';
                 type = types.str;
                 default = "webpack.config.js";
               };
 
               bundledModuleName = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  The name of the file containing the bundled JS module that
+                  `spago bundle-module` will produce.
+
+                  Added in: 2.1
+                '';
                 type = types.str;
                 default = "output.js";
               };
 
               enableCheck = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                    Whether to add a flake check testing that the bundle builds
+                    correctly.
+
+                    Added in: 2.1
+                '';
                 type = types.bool;
                 default = false;
               };
@@ -85,20 +105,23 @@ in
 
           testConfigs = types.submodule {
             options = {
-              sources = lib.mkOption {
-                type = types.listOf types.str;
-                description = '' FIXME '';
-                default = [ ];
-              };
-
               buildInputs = lib.mkOption {
                 type = types.listOf types.package;
-                description = '' FIXME '';
+                description = ''
+                  Additional packages passed through to the `buildInputs` of
+                  the derivation.
+
+                  Added in: 2.1
+                '';
                 default = [ ];
               };
 
               testMain = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  The name of the main Purescript module containing the test suite.
+
+                  Added in: 2.1
+                '';
                 type = purescriptModule;
               };
             };
@@ -107,13 +130,24 @@ in
           runtime = types.submodule {
             options = {
               enableCtlServer = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Whether to enable or disable the CTL server (used to apply
+                  arguments to scripts and evaluate UPLC).
+
+                  Added in: 2.1
+                '';
                 type = types.bool;
                 default = false;
               };
 
               extraConfig = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Additional config options to pass to the CTL runtime. See
+                  `runtime.nix` in the CTL flake for a reference of the
+                  available options.
+
+                  Added in: 2.1
+                '';
                 type = types.attrsOf types.anything;
                 default = { };
               };
@@ -124,57 +158,95 @@ in
             options = {
               src = lib.mkOption {
                 description = ''
-                  Path to the project's source code.
+                  Path to the project's source code, including its package.json
+                  and package-lock.json files.
 
-                  Added in: 2.0.
+                  Added in: 2.1.
                 '';
                 type = types.path;
               };
 
-              censoredSpagoCodes = lib.mkOption {
-                description = '' FIXME '';
+              ignoredWarningCodes = lib.mkOption {
+                description = ''
+                  Warnings from `purs` to silence during compilation.
+
+                  Added in: 2.1
+                '';
                 default = [ ];
                 type = types.listOf types.str;
               };
 
               shell = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Options to configure the project's devShell.
+
+                  Added in: 2.1
+                '';
                 type = shell;
                 default = { };
               };
 
               bundles = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  A map of bundles to be produced for this project.
+
+                  Added in: 2.1
+                '';
                 type = types.attrsOf bundle;
                 default = { };
               };
 
               plutip = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Options to configure the project's Plutip suite. If defined,
+                  a flake check will be created which runs the tests. 
+
+                  Added in: 2.1
+                '';
                 type = types.nullOr testConfigs;
                 default = null;
               };
 
               tests = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Options to configure the project's (non-Plutip) tests. If defined,
+                  a flake check will be created which runs the tests.
+
+                  Added in: 2.1
+                '';
                 type = types.nullOr testConfigs;
                 default = null;
               };
 
               runtime = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Options to configure CTL's runtime.
+
+                  Added in: 2.1
+                '';
                 type = runtime;
                 default = { };
               };
 
               enableFormatCheck = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Whether to add a flake check verifying that the code
+                  (including the flake.nix and any JS files in the project) has
+                  been formatted.
+
+                  Added in: 2.1
+                '';
                 type = types.bool;
                 default = false;
               };
 
               enableJsLintCheck = lib.mkOption {
-                description = '' FIXME '';
+                description = ''
+                  Whether to add a check verifying that the JS files in the
+                  project have been linted.
+
+                  Added in: 2.1
+                '';
                 type = types.bool;
                 default = false;
               };
@@ -183,7 +255,12 @@ in
         in
         {
           options.offchain = lib.mkOption {
-            description = "Off-chain project declaration";
+            description = ''
+              A CTL project declaration, with arbitrarily many bundles, a
+              devShell and optional tests.
+
+              Added in: 2.1
+            '';
             type = types.attrsOf project;
           };
         });
@@ -233,7 +310,7 @@ in
 
                   inherit projectName;
 
-                  censorCodes = projectConfig.censoredSpagoCodes;
+                  censorCodes = projectConfig.ignoredWarningCodes;
 
                   shell = {
                     withRuntime = true;
@@ -245,12 +322,11 @@ in
               pkgSet;
 
             bundles = (lib.mapAttrs
-              (_: bundle: project.bundlePursProject {
+              (name: bundle: project.bundlePursProject {
                 inherit (bundle)
-                  buildInputs
                   bundledModuleName
-                  sources
                   webpackConfig;
+                inherit name;
 
                 main = bundle.mainModule;
                 entrypoint = bundle.entrypointJs;
