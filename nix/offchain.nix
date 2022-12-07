@@ -32,7 +32,7 @@ in
           # is what most of CTL's flake takes as input.
           purescriptModule =
             types.strMatching
-            ''[[:upper:]][[:alnum:]]*(\.[[:upper:]][[:alnum:]]*)*'';
+              ''[[:upper:]][[:alnum:]]*(\.[[:upper:]][[:alnum:]]*)*'';
 
           bundle = types.submodule {
             options = {
@@ -92,10 +92,10 @@ in
 
               enableCheck = lib.mkOption {
                 description = ''
-                    Whether to add a flake check testing that the bundle builds
-                    correctly.
+                  Whether to add a flake check testing that the bundle builds
+                  correctly.
 
-                    Added in: 2.1
+                  Added in: 2.1
                 '';
                 type = types.bool;
                 default = false;
@@ -336,8 +336,8 @@ in
             bundleChecks =
               lib.mapAttrs'
                 (bundleName: _: {
-                    name = "${bundleName}_build-check";
-                    value = bundles.${bundleName};
+                  name = "${bundleName}_build-check";
+                  value = bundles.${bundleName};
                 })
                 (lib.filterAttrs
                   (_: projectBundle: projectBundle.enableCheck)
