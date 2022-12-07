@@ -333,13 +333,17 @@ in
               })
               projectConfig.bundles);
 
-            checks = {
-              bundle-checks =
-                utils.flat2With (bundleName: _: bundleName)
-                  (lib.mapAttrs (bundleName: _: bundles.${bundleName})
-                    (lib.filterAttrs (_: bundle: bundle.enableCheck)
-                      projectConfig.bundles));
+            bundleChecks =
+              lib.mapAttrs'
+                (bundleName: _: {
+                    name = "${bundleName}_build-check";
+                    value = bundles.${bundleName};
+                })
+                (lib.filterAttrs
+                  (_: projectBundle: projectBundle.enableCheck)
+                  projectConfig.bundles);
 
+            checks = bundle-checks // {
               tests =
                 lib.ifEnable
                   (projectConfig ? tests)
