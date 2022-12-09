@@ -454,7 +454,7 @@ in
               projects);
 
         checks = projectChecks // {
-          all_offchain = utils.combineChecks "all_onchain" projectChecks;
+          all_offchain = utils.combineChecks "all_offchain" projectChecks;
         };
 
         devShells = lib.mapAttrs (_: project: project.devShell) projects;
