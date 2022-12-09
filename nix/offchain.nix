@@ -418,6 +418,46 @@ in
               ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { };
             } // bundles;
 
+            run.nixFormat =
+              {
+                dependencies = with pkgs; [ fd nixpkgs-fmt ];
+                script = '' fd -enix --exclude='spago*' -x nixpkgs-fmt {} '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Formats nix files using nixpkgs-fmt."
+                '';
+              };
+
+            run.pursFormat =
+              {
+                dependencies = with pkgs; [ fd easy-ps.purs-tidy ];
+                script = '' fd -epurs -X purs-tidy format-in-place {} '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Formats PureScript files using purs-tidy."
+                '';
+              };
+
+            run.jsFormat =
+              {
+                dependencies = with pkgs; [ fd nodePackages.prettier ];
+                script = '' fd -ejs -ets -X prettier -w {} '';
+                groups = [ "format" "precommit" ];
+                help = ''
+                  echo "  Formats Javascript/TypeScript files using prettier."
+                '';
+              };
+
+            run.spago2nix =
+              {
+                dependencies = [ pkgs.easy-ps.spago2nix ];
+                script = '' spago2nix generate  '';
+                groups = [ "updateCtl" ];
+                help = ''
+                  echo "  Regenerates the spago.nix file."
+                '';
+              };
+
             inherit checks;
             check = utils.combineChecks "combined-checks" checks;
 
@@ -439,6 +479,12 @@ in
               (lib.mapAttrs
                 (_: project: project.checks // { all = project.check; })
                 projects));
+
+        projectScripts =
+          utils.flat2With (project: script: if project == "default" then script else project + "_" + script)
+            (lib.mapAttrs
+              (_: project: project.run)
+              projects);
       in
       {
         packages =
@@ -446,6 +492,8 @@ in
             (lib.mapAttrs
               (_: project: project.packages)
               projects);
+
+        run = projectScripts;
 
         apps =
           utils.flat2With (projectName: appName: projectName + "_" + appName)
