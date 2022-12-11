@@ -740,11 +740,11 @@
         "nixpkgs-lib": "nixpkgs-lib"
       },
       "locked": {
-        "lastModified": 1668450977,
-        "narHash": "sha256-cfLhMhnvXn6x1vPm+Jow3RiFAUSCw/l1utktCw5rVA4=",
+        "lastModified": 1670441596,
+        "narHash": "sha256-+T487QnluBT5F9tVk0chG/zzv+9zzTrx3o7rlOBK7ps=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "d591857e9d7dd9ddbfba0ea02b43b927c3c0f1fa",
+        "rev": "8d0e2444ab05f79df93b70e5e497f8c708eb6b9b",
         "type": "github"
       },
       "original": {
@@ -1186,11 +1186,11 @@
     "haskell-language-server": {
       "flake": false,
       "locked": {
-        "lastModified": 1669648791,
-        "narHash": "sha256-3RbN8CP9LXlFraW0dcEaN+5+ztU6IEqiWD9uLPdyoQ8=",
+        "lastModified": 1670509556,
+        "narHash": "sha256-K9QgrKwZr/w/RrdI8bUg4yJEoUy0PjgkPuEc4+Io1AE=",
         "owner": "haskell",
         "repo": "haskell-language-server",
-        "rev": "aeb57a8eb56964c8666d7cd05b6ba46d531de7c7",
+        "rev": "f6296524b8c65deff4fcd49fcf3af5dfe4aa253d",
         "type": "github"
       },
       "original": {
@@ -1254,29 +1254,6 @@
         "owner": "input-output-hk",
         "repo": "haskell.nix",
         "rev": "cbf1e918b6e278a81c385155605b8504e498efef",
-        "type": "github"
-      }
-    },
-    "haskell-nix-extra-hackage": {
-      "inputs": {
-        "haskell-nix": [
-          "haskell-nix"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1658790167,
-        "narHash": "sha256-QRZCAz/k5hEvXiHc2aVDDc2jgPTeiRXUtARg0GA9rDU=",
-        "owner": "mlabs-haskell",
-        "repo": "haskell-nix-extra-hackage",
-        "rev": "ee50d7eb739819efdb27bda9f444e007c12e9833",
-        "type": "github"
-      },
-      "original": {
-        "owner": "mlabs-haskell",
-        "repo": "haskell-nix-extra-hackage",
         "type": "github"
       }
     },
@@ -2232,11 +2209,11 @@
     },
     "nixpkgs-latest": {
       "locked": {
-        "lastModified": 1669864803,
-        "narHash": "sha256-MWxYXiKvips/hynGiX1tYX4GfLgJU3PXypYwplmqWpw=",
+        "lastModified": 1670722629,
+        "narHash": "sha256-1Lx1o/HgfQMthAqiPI79nE8ugjbGs54AQUASlSjlPBE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "0b23f22d473831279b74a52aced1cbed712c18c3",
+        "rev": "43dcea78854e081966f03077330445d63c028c33",
         "type": "github"
       },
       "original": {
@@ -2662,7 +2639,6 @@
         "ghc-next-packages": "ghc-next-packages",
         "haskell-language-server": "haskell-language-server",
         "haskell-nix": "haskell-nix",
-        "haskell-nix-extra-hackage": "haskell-nix-extra-hackage",
         "iohk-nix": "iohk-nix",
         "nixpkgs": [
           "haskell-nix",

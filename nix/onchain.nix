@@ -170,6 +170,7 @@ in
         inherit (pkgs) haskell-nix;
 
         utils = import ./utils.nix { inherit pkgs lib; };
+        hackageUtils = import ./mk-hackage.nix { inherit liqwid-nix system pkgs lib; };
         makeProject = projectName: projectConfig:
           let
 
@@ -233,7 +234,7 @@ in
             ] ++ projectConfig.extraHackageDeps;
 
             customHackages =
-              liqwid-nix.haskell-nix-extra-hackage.mkHackagesFor system
+              hackageUtils.mkHackage
                 projectConfig.ghc.version
                 hackageDeps;
 
@@ -279,30 +280,13 @@ in
               })
             ];
 
-            hls' =
-              haskell-nix.cabalProject' {
-                modules = [{
-                  inherit nonReinstallablePkgs;
-                  reinstallableLibGhc = false;
-                }];
-
-                compiler-nix-name = projectConfig.ghc.version;
-                src = "${liqwid-nix.haskell-language-server}";
-                sha256map."https://github.com/pepeiborra/ekg-json"."7a0af7a8fd38045fd15fb13445bdcc7085325460" =
-                  "fVwKxGgM0S4Kv/4egVAAiAjV7QB5PBqMVMCfsv7otIQ=";
-              };
-            hls =
-              hls'.hsPkgs.haskell-language-server.components.exes.haskell-language-server;
-
             commandLineTools =
               [
                 pkgs-latest.cabal-install
-                hlint
                 cabalFmt
                 fourmolu
                 nixpkgsFmt
                 hasktags
-                hls
                 pkgs-latest.fd
                 pkgs-latest.entr
                 applyRefact
@@ -317,6 +301,10 @@ in
                   shell = {
                     withHoogle = true;
                     exactDeps = true;
+                    tools = {
+                      hlint = { };
+                      haskell-language-server = { };
+                    };
                     nativeBuildInputs = commandLineTools;
                     shellHook = ''
                       liqwid(){ c=$1; shift; nix run .#$c -- $@; }
@@ -536,4 +524,3 @@ in
       };
   };
 }
-
