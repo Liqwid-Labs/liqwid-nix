@@ -280,6 +280,7 @@ in
         defaultCtlOverlays = with ctl-overlays; [
           purescript
           runtime
+          spago
         ];
 
         includeCtlServer =
