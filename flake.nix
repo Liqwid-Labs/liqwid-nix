@@ -18,9 +18,6 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     # On-chain deps
-    haskell-nix-extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage";
-    haskell-nix-extra-hackage.inputs.haskell-nix.follows = "haskell-nix";
-    haskell-nix-extra-hackage.inputs.nixpkgs.follows = "nixpkgs";
     haskell-nix.url = "github:input-output-hk/haskell.nix?rev=cbf1e918b6e278a81c385155605b8504e498efef";
     iohk-nix.url = "github:input-output-hk/iohk-nix?rev=4848df60660e21fbb3fe157d996a8bac0a9cf2d6";
     iohk-nix.flake = false;
@@ -28,8 +25,6 @@
     ghc-next-packages.url = "github:input-output-hk/ghc-next-packages?ref=repo";
     ghc-next-packages.flake = false;
 
-    haskell-language-server.url = "github:haskell/haskell-language-server";
-    haskell-language-server.flake = false;
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=master";
   };
 
