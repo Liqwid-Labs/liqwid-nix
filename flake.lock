@@ -2524,11 +2524,11 @@
         "plutip": "plutip"
       },
       "locked": {
-        "lastModified": 1671540584,
-        "narHash": "sha256-X5uSsvbrdCfoVEt7aB5FAp7f3KadUV1v+P4eR0PJMo4=",
+        "lastModified": 1671543654,
+        "narHash": "sha256-molG+k9xz797LAhzb4NGi0ohsS+ojJSTs/d5W8W36bU=",
         "owner": "Plutonomicon",
         "repo": "cardano-transaction-lib",
-        "rev": "e461bce0d560d823fa064724e234826684c79a1e",
+        "rev": "68f371617f8aa3eef2c90587981a894057403ac1",
         "type": "github"
       },
       "original": {
@@ -3646,11 +3646,11 @@
         "nixpkgs-lib": "nixpkgs-lib"
       },
       "locked": {
-        "lastModified": 1668450977,
-        "narHash": "sha256-cfLhMhnvXn6x1vPm+Jow3RiFAUSCw/l1utktCw5rVA4=",
+        "lastModified": 1671322946,
+        "narHash": "sha256-J8Qj+ITV+eti+irTK9Zn2LZVYoIW2g7irPUckU8yZvU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "d591857e9d7dd9ddbfba0ea02b43b927c3c0f1fa",
+        "rev": "3f7172646953bf86dad5953bc45f0edae62ac445",
         "type": "github"
       },
       "original": {
@@ -10189,11 +10189,11 @@
     },
     "nixpkgs-latest": {
       "locked": {
-        "lastModified": 1669864803,
-        "narHash": "sha256-MWxYXiKvips/hynGiX1tYX4GfLgJU3PXypYwplmqWpw=",
+        "lastModified": 1670722629,
+        "narHash": "sha256-1Lx1o/HgfQMthAqiPI79nE8ugjbGs54AQUASlSjlPBE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "0b23f22d473831279b74a52aced1cbed712c18c3",
+        "rev": "43dcea78854e081966f03077330445d63c028c33",
         "type": "github"
       },
       "original": {

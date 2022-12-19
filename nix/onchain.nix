@@ -404,6 +404,8 @@ in
                     '';
                 };
 
+            packages = flake.packages;
+
             checks =
               lib.fold lib.mergeAttrs { }
                 [
@@ -419,7 +421,7 @@ in
           {
             devShell = flake.devShell;
 
-            inherit checks;
+            inherit checks packages;
 
             check = utils.combineChecks "combined-checks" checks;
 

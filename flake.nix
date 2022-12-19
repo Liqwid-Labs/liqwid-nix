@@ -32,8 +32,8 @@
     nixpkgs-ctl.follows = "cardano-transaction-lib/nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit self; } {
+  outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./nix/templates.nix
         ./nix/all-modules.nix
@@ -65,6 +65,13 @@
           checks = self.checks.x86_64-linux;
           devShells = self.devShells.x86_64-linux;
         };
+        config.herculesCI = { ... }: {
+          onPush.default = {
+            outputs = { ... }:
+              self.checks.x86_64-linux;
+          };
+        };
       };
+
     };
 }

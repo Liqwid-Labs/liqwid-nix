@@ -17,6 +17,20 @@ in
     perSystem = mkPerSystemOption
       ({ config, self', inputs', pkgs, system, ... }:
         let
+          hercules = types.submodule
+            {
+              options = {
+                enable = lib.mkOption {
+                  decription = ''
+                    Whether to configure hercules.
+                     
+                    Added in: 2.1.0.
+                  '';
+                  type = types.bool;
+                  default = true;
+                };
+              };
+            };
           ci = types.submodule
             {
               options = {
@@ -37,6 +51,15 @@ in
                   '';
                   default = true;
                   type = types.bool;
+                };
+                hercules = lib.mkOption {
+                  description = ''
+                    Options for Hercules specific configuration.
+
+                    Added in 2.1.0.
+                  '';
+                  default = { };
+                  type = hercules;
                 };
               };
             };
@@ -69,6 +92,16 @@ in
           pkgs.lib.genAttrs config.ci.required (name: config.checks.${name});
 
         combinedChecks = utils.combineChecks "combined-checks" desiredChecks;
+
+        hercules =
+          lib.ifEnable config.ci.hercules.enable
+            {
+              herculesCI = { ... }: {
+                onPush.default = {
+                  outputs = { ... }: desiredChecks;
+                };
+              };
+            };
       in
       {
         checks.required = combinedChecks;
