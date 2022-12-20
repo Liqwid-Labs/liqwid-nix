@@ -20,7 +20,7 @@ in
                 description = ''
                   List of extra packages to make available to the shell.
 
-                  Added in: 2.1.
+                  Added in: 2.1.0.
                 '';
                 default = [ ];
               };
@@ -40,7 +40,7 @@ in
                 description = ''
                   The main Purescript module for the bundle (for instance, 'Main').
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = purescriptModule;
               };
@@ -49,7 +49,7 @@ in
                 description = ''
                   Stringified path to the webpack `entrypoint` file.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
 
                 # NOTE: ideally, this would be a types.path, but it's easier to
@@ -63,7 +63,7 @@ in
                   Whether this bundle is being produced for a browser environment or
                   not.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.bool;
                 default = true;
@@ -73,7 +73,7 @@ in
                 description = ''
                   Stringified path to the Webpack config file to use.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.str;
                 default = "webpack.config.js";
@@ -84,7 +84,7 @@ in
                   The name of the file containing the bundled JS module that
                   `spago bundle-module` will produce.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.str;
                 default = "output.js";
@@ -95,7 +95,7 @@ in
                   Whether to add a flake check testing that the bundle builds
                   correctly.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.bool;
                 default = false;
@@ -111,7 +111,7 @@ in
                   Additional packages passed through to the `buildInputs` of
                   the derivation.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 default = [ ];
               };
@@ -120,7 +120,7 @@ in
                 description = ''
                   The name of the main Purescript module containing the test suite.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = purescriptModule;
               };
@@ -135,7 +135,7 @@ in
                   arguments to scripts and evaluate UPLC). Enabling this will
                   also add the ctl-server overlay.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.bool;
                 default = false;
@@ -150,7 +150,7 @@ in
                   By default, the runtime is set to use the `preview` network
                   and the same node version that CTL uses in its tests.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.attrsOf types.anything;
                 default = { };
@@ -165,7 +165,7 @@ in
                   Path to the project's source code, including its package.json
                   and package-lock.json files.
 
-                  Added in: 2.1.
+                  Added in: 2.1.0.
                 '';
                 type = types.path;
               };
@@ -174,7 +174,7 @@ in
                 description = ''
                   Warnings from `purs` to silence during compilation.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 default = [ ];
                 type = types.listOf types.str;
@@ -184,7 +184,7 @@ in
                 description = ''
                   Options to configure the project's devShell.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = shell;
                 default = { };
@@ -194,7 +194,7 @@ in
                 description = ''
                   A map of bundles to be produced for this project.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.attrsOf bundle;
                 default = { };
@@ -205,7 +205,7 @@ in
                   Options to configure the project's Plutip suite. If defined,
                   a flake check will be created which runs the tests. 
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.nullOr testConfigs;
                 default = null;
@@ -216,7 +216,7 @@ in
                   Options to configure the project's (non-Plutip) tests. If defined,
                   a flake check will be created which runs the tests.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.nullOr testConfigs;
                 default = null;
@@ -226,7 +226,7 @@ in
                 description = ''
                   Options to configure CTL's runtime.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = runtime;
                 default = { };
@@ -238,7 +238,7 @@ in
                   (including the flake.nix and any JS files in the project) has
                   been formatted.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.bool;
                 default = false;
@@ -249,7 +249,7 @@ in
                   Whether to add a check verifying that the JS files in the
                   project have been linted.
 
-                  Added in: 2.1
+                  Added in: 2.1.0.
                 '';
                 type = types.bool;
                 default = false;
@@ -263,7 +263,7 @@ in
               A CTL project declaration, with arbitrarily many bundles, a
               devShell and optional tests.
 
-              Added in: 2.1
+              Added in: 2.1.0.
             '';
             type = types.attrsOf project;
           };

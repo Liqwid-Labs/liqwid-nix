@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.1.0 - 2022-12-20
+
+- Add an off-chain module for CTL projects.
+
 ## 2.0.0 -- 2022-11-28
 
 - Rework Nix system into using flake-parts.
