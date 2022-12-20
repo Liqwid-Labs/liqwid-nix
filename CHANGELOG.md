@@ -6,6 +6,13 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
 - Add an off-chain module for CTL projects.
 
+## 2.0.1 -- 2022-12-12
+
+- Vendored version of mkHackage instead of using now deprecated `haskell-nix-extra-hackage`.
+
+- `hlint` and `haskell-language-server` provided using `tools` option of haskell.nix instead
+  of manually.
+
 ## 2.0.0 -- 2022-11-28
 
 - Rework Nix system into using flake-parts.
