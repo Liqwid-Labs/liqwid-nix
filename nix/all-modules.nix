@@ -3,6 +3,7 @@ let
   # Which modules do we want to expose to consumers of liqwid-nix.
   exposedModules = {
     onchain = ./onchain.nix;
+    offchain = ./offchain.nix;
     run = ./run/default.nix;
     ci = ./ci.nix;
   };

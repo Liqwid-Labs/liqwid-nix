@@ -26,6 +26,10 @@
     ghc-next-packages.flake = false;
 
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=master";
+
+    # CTL
+    cardano-transaction-lib.url = "github:Plutonomicon/cardano-transaction-lib/develop";
+    nixpkgs-ctl.follows = "cardano-transaction-lib/nixpkgs";
   };
 
   outputs = { self, nixpkgs, flake-parts, ... }:
