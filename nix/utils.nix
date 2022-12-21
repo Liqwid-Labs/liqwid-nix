@@ -23,4 +23,8 @@
         ${exec}
         mkdir $out
       '';
+
+  # Add a prefix if it is not 'default'.
+  buildPrefix = namespace: name:
+    if namespace == "default" then name else namespace + "_" + name;
 }

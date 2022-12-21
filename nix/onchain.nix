@@ -1,5 +1,5 @@
 # TODO: on-chain Plutarch project configuration module.
-{ self, config, lib, flake-parts-lib, ... }:
+{ self, lib, flake-parts-lib, ... }:
 let
   inherit (flake-parts-lib)
     mkSubmoduleOptions
@@ -150,6 +150,7 @@ in
           options.onchain = lib.mkOption {
             description = "On-chain project declaration";
             type = types.attrsOf project;
+            default = { };
           };
         });
   };
@@ -404,6 +405,8 @@ in
                     '';
                 };
 
+            packages = flake.packages;
+
             checks =
               lib.fold lib.mergeAttrs { }
                 [
@@ -419,7 +422,7 @@ in
           {
             devShell = flake.devShell;
 
-            inherit checks;
+            inherit checks packages;
 
             check = utils.combineChecks "combined-checks" checks;
 
@@ -505,7 +508,7 @@ in
               projects);
 
         projectScripts =
-          utils.flat2With (project: script: if project == "default" then script else project + "_" + script)
+          utils.flat2With utils.buildPrefix
             (lib.mapAttrs
               (_: project: project.run)
               projects);

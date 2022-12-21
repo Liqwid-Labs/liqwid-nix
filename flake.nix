@@ -6,7 +6,6 @@
     extra-substituters = [ "https://cache.iog.io" "https://public-plutonomicon.cachix.org" "https://mlabs.cachix.org" ];
     extra-trusted-public-keys = [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" "public-plutonomicon.cachix.org-1:3AKJMhCLn32gri1drGuaZmFrmnue+KkKrhhubQk/CWc=" ];
     allow-import-from-derivation = "true";
-    bash-prompt = "\\[\\e[0m\\][\\[\\e[0;2m\\]liqwid-nix \\e[0;5m\\]2.0.\\[\\e[0;93m\\]\\w\\[\\e[0m\\]]\\[\\e[0m\\]$ \\[\\e[0m\\]";
     max-jobs = "auto";
     auto-optimise-store = "true";
   };
@@ -32,8 +31,8 @@
     nixpkgs-ctl.follows = "cardano-transaction-lib/nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit self; } {
+  outputs = inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./nix/templates.nix
         ./nix/all-modules.nix
@@ -41,7 +40,7 @@
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, lib, system, ... }:
         let
-          pkgs = import nixpkgs { inherit system; };
+          pkgs = import inputs.nixpkgs { inherit system; };
           utils = import ./nix/utils.nix { inherit pkgs lib; };
         in
         {
@@ -59,11 +58,18 @@
               find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt
             '';
         };
-      flake = {
+      flake = { self, ... }: {
         config.hydraJobs = {
           packages = self.packages.x86_64-linux;
           checks = self.checks.x86_64-linux;
           devShells = self.devShells.x86_64-linux;
+        };
+        config.herculesCI = { ... }: {
+          onPush.default = {
+            outputs = { ... }:
+              self.checks.x86_64-linux;
+          };
+          ciSystems = [ "x86_64-linux" ];
         };
       };
     };

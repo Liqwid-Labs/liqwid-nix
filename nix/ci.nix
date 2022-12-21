@@ -1,4 +1,4 @@
-{ self, config, lib, flake-parts-lib, ... }:
+{ self, lib, flake-parts-lib, ... }:
 let
   inherit (flake-parts-lib)
     mkSubmoduleOptions
@@ -37,6 +37,15 @@ in
                   '';
                   default = true;
                   type = types.bool;
+                };
+                systems = lib.mkOption {
+                  description = ''
+                    The systems to build on.
+
+                    Added in: 2.1.0.
+                  '';
+                  default = [ "x86_64-linux" ];
+                  type = types.listOf types.str;
                 };
               };
             };
