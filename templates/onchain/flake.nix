@@ -22,28 +22,20 @@
 
   outputs = inputs@{ self, liqwid-nix, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = liqwid-nix.allModules ++ [
-        ({ self, ... }:
-          {
-            perSystem = { config, pkgs', self', inputs, system, ... }:
-              let
-                pkgs = import self.inputs.nixpkgs {
-                  inherit system;
-                };
-              in
-              {
-                onchain.default = {
-                  src = ./.;
-                  ghc.version = "ghc925";
-                  shell = { };
-                  enableBuildChecks = true;
-                  extraHackageDeps = [ ];
-                };
-                ci.required = [ "all_onchain" ];
-              };
-          })
+      imports = [
+        inputs.liqwid-nix.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
-      perSystem = { config, self', inputs', pkgs, system, ... }: { };
+      perSystem = { config, self', inputs', pkgs, system, ... }:
+        {
+          onchain.default = {
+            src = ./.;
+            ghc.version = "ghc925";
+            shell = { };
+            enableBuildChecks = true;
+            extraHackageDeps = [ ];
+          };
+          ci.required = [ "all_onchain" ];
+        };
     };
 }

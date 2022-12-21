@@ -17,20 +17,6 @@ in
     perSystem = mkPerSystemOption
       ({ config, self', inputs', pkgs, system, ... }:
         let
-          hercules = types.submodule
-            {
-              options = {
-                enable = lib.mkOption {
-                  decription = ''
-                    Whether to configure hercules.
-                     
-                    Added in: 2.1.0.
-                  '';
-                  type = types.bool;
-                  default = true;
-                };
-              };
-            };
           ci = types.submodule
             {
               options = {
@@ -60,15 +46,6 @@ in
                   '';
                   default = [ "x86_64-linux" ];
                   type = types.listOf types.str;
-                };
-                hercules = lib.mkOption {
-                  description = ''
-                    Options for Hercules specific configuration.
-
-                    Added in 2.1.0.
-                  '';
-                  default = { };
-                  type = hercules;
                 };
               };
             };

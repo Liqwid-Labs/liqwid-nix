@@ -92,12 +92,13 @@ in
         };
 
         buildGroup = groupName: configs:
+          # FIXME: This is a hacky way to fix it, it shouldn't create duplicates.
+          let cfgs = pkgs.lib.unique configs; in
           {
             type = "app";
             program = pkgs.writeShellApplication {
-
               name = "group";
-              runtimeInputs = lib.concatLists (builtins.map (c: c.dependencies) configs);
+              runtimeInputs = lib.concatLists (builtins.map (c: c.dependencies) cfgs);
               text = ''
                 export LC_CTYPE=C.UTF-8
                 export LC_ALL=C.UTF-8
@@ -105,7 +106,7 @@ in
                 set -x
 
                 # Scripts follow
-                ${lib.concatStringsSep "\n\n" (builtins.map (c: c.script) configs)}
+                ${lib.concatStringsSep "\n\n" (builtins.map (c: c.script) cfgs)}
               '';
             };
           };

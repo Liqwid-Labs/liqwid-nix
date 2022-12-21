@@ -2,15 +2,13 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
-## 2.1.0 - 2022-12-20
+## 2.1.0 - 2022-12-21
 
 - Add an off-chain module for CTL projects.
 
 - Updated flake-parts, passing inputs now instead of self.
 
 - On-chain exports packages now, which can be accessed the normal way.
-
-- Basic hercules configuration support.
 
 - Templates no longer have bash prompt override.
 

@@ -150,6 +150,7 @@ in
           options.onchain = lib.mkOption {
             description = "On-chain project declaration";
             type = types.attrsOf project;
+            default = { };
           };
         });
   };
@@ -507,7 +508,7 @@ in
               projects);
 
         projectScripts =
-          utils.flat2With (project: script: if project == "default" then script else project + "_" + script)
+          utils.flat2With utils.buildPrefix
             (lib.mapAttrs
               (_: project: project.run)
               projects);
