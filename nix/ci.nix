@@ -1,4 +1,4 @@
-{ self, config, lib, flake-parts-lib, ... }:
+{ self, lib, flake-parts-lib, ... }:
 let
   inherit (flake-parts-lib)
     mkSubmoduleOptions
@@ -52,6 +52,15 @@ in
                   default = true;
                   type = types.bool;
                 };
+                systems = lib.mkOption {
+                  description = ''
+                    The systems to build on.
+
+                    Added in: 2.1.0.
+                  '';
+                  default = [ "x86_64-linux" ];
+                  type = types.listOf types.str;
+                };
                 hercules = lib.mkOption {
                   description = ''
                     Options for Hercules specific configuration.
@@ -92,16 +101,6 @@ in
           pkgs.lib.genAttrs config.ci.required (name: config.checks.${name});
 
         combinedChecks = utils.combineChecks "combined-checks" desiredChecks;
-
-        hercules =
-          lib.ifEnable config.ci.hercules.enable
-            {
-              herculesCI = { ... }: {
-                onPush.default = {
-                  outputs = { ... }: desiredChecks;
-                };
-              };
-            };
       in
       {
         checks.required = combinedChecks;

@@ -6,7 +6,6 @@
     extra-substituters = [ "https://cache.iog.io" "https://public-plutonomicon.cachix.org" "https://mlabs.cachix.org" ];
     extra-trusted-public-keys = [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" "public-plutonomicon.cachix.org-1:3AKJMhCLn32gri1drGuaZmFrmnue+KkKrhhubQk/CWc=" ];
     allow-import-from-derivation = "true";
-    bash-prompt = "\\[\\e[0m\\][\\[\\e[0;2m\\]liqwid-nix \\e[0;5m\\]2.0.\\[\\e[0;93m\\]\\w\\[\\e[0m\\]]\\[\\e[0m\\]$ \\[\\e[0m\\]";
     max-jobs = "auto";
     auto-optimise-store = "true";
   };
@@ -21,8 +20,8 @@
     };
   };
 
-  outputs = { self, liqwid-nix, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit self; } {
+  outputs = inputs@{ self, liqwid-nix, flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
       imports = liqwid-nix.allModules ++ [
         ({ self, ... }:
           {

@@ -4,7 +4,7 @@ let
   exposedModules = {
     onchain = ./onchain.nix;
     offchain = ./offchain.nix;
-    run = ./run/default.nix;
+    run = ./run.nix;
     ci = ./ci.nix;
   };
 in
@@ -12,6 +12,9 @@ in
   config = {
     flake = {
       allModules = builtins.attrValues exposedModules;
+      flakeModule = {
+        imports = builtins.attrValues exposedModules;
+      };
     } // exposedModules;
   };
 }

@@ -266,6 +266,7 @@ in
               Added in: 2.1.0.
             '';
             type = types.attrsOf project;
+            default = { };
           };
         });
   };
