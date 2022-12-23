@@ -12,7 +12,6 @@ in
     perSystem = mkPerSystemOption
       ({ config, self', inputs', pkgs, system, ... }:
         let
-
           shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
@@ -263,6 +262,8 @@ in
               A CTL project declaration, with arbitrarily many bundles, a
               devShell and optional tests.
 
+              In order to use this, your repository must provide the `cardano-transaction-lib` input.
+
               Added in: 2.1.0.
             '';
             type = types.attrsOf project;
@@ -274,7 +275,11 @@ in
     perSystem = { config, self', inputs', lib, system, ... }:
       let
         liqwid-nix = self.inputs.liqwid-nix.inputs;
-        ctl-overlays = self.inputs.cardano-transaction-lib.overlays;
+
+        ctl-overlays = assert (lib.assertMsg (self.inputs ? cardano-transaction-lib) ''
+          [liqwid-nix]: liqwid-nix offchain module is being used. Please provide a 'cardano-transaction-lib' input.
+        ''); self.inputs.cardano-transaction-lib.overlays;
+
         projectConfigs = config.offchain;
         utils = import ./utils.nix { inherit pkgs lib; };
 
@@ -294,7 +299,11 @@ in
           then [ ctl-overlays.ctl-server ]
           else [ ];
 
-        pkgs = import liqwid-nix.nixpkgs-ctl {
+        nixpkgs-ctl = assert (lib.assertMsg (self.inputs ? nixpkgs-ctl) ''
+          [liqwid-nix] liqwid-nix offchain module is being used. Please provide a 'nixpkgs-ctl' input, as taken from 'cardano-transaction-lib'.
+        ''); self.inputs.nixpkgs-ctl;
+
+        pkgs = import nixpkgs-ctl {
           inherit system;
           overlays = defaultCtlOverlays ++ additionalOverlays;
         };
