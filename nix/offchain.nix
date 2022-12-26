@@ -253,6 +253,16 @@ in
                 type = types.bool;
                 default = false;
               };
+
+              nodejsPackage = lib.mkOption {
+                description = ''
+                  The nodejs package to use.
+
+                  Added in: 2.1.1.
+                '';
+                type = types.package;
+                default = pkgs.nodejs-14_x;
+              };
             };
           };
         in
@@ -312,6 +322,8 @@ in
 
         makeProject = projectName: projectConfig:
           let
+            nodejsPackage = projectConfig.nodejsPackage;
+
             defaultCommandLineTools = with pkgs; [
               dhall
               easy-ps.purs-tidy
@@ -320,7 +332,7 @@ in
               nodePackages.eslint
               nodePackages.npm
               nodePackages.prettier
-              nodejs
+              nodejsPackage
             ];
 
             commandLineTools =
@@ -333,6 +345,11 @@ in
                   inherit (projectConfig) src;
 
                   inherit projectName;
+
+                  nodejs = nodejsPackage;
+
+                  packageJson = projectConfig.src + "/package.json";
+                  packageLock = projectConfig.src + "/package-lock.json";
 
                   censorCodes = projectConfig.ignoredWarningCodes;
 
@@ -360,14 +377,14 @@ in
             bundleChecks =
               lib.mapAttrs'
                 (bundleName: _: {
-                  name = "${bundleName}_build-check";
+                  name = "build:${bundleName}";
                   value = bundles.${bundleName};
                 })
                 (lib.filterAttrs
                   (_: projectBundle: projectBundle.enableCheck)
                   projectConfig.bundles);
 
-            checks = {
+            checks = bundleChecks // {
               bundle-checks =
                 utils.combineChecks "bundle-checks" bundleChecks;
 
@@ -486,7 +503,7 @@ in
 
         projectChecks =
           lib.filterAttrs (_: check: check != { })
-            (utils.flat2With (project: check: project + "_" + check)
+            (utils.flat2With utils.buildPrefix
               (lib.mapAttrs
                 (_: project: project.checks // { all = project.check; })
                 projects));
