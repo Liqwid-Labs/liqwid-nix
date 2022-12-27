@@ -2,6 +2,13 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.1.1 - 2022-12-26
+
+- Off-chain module requires inputs being passed by project consuming liqwid-nix
+  instead of being provided by liqwid-nix directly.
+  
+  This reduces inputs and as a result flake.lock size.
+  
 ## 2.1.0 - 2022-12-21
 
 - Add an off-chain module for CTL projects.

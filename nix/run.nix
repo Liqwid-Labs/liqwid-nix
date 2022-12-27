@@ -36,7 +36,6 @@ in
                     Added in: 2.0.0.
                   '';
                   type = types.str;
-                  default = "echo UNIMPLEMENTED RUN SCRIPT";
                 };
                 doCheck = lib.mkOption {
                   description = ''

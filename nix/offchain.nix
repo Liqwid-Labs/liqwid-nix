@@ -12,7 +12,6 @@ in
     perSystem = mkPerSystemOption
       ({ config, self', inputs', pkgs, system, ... }:
         let
-
           shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
@@ -254,6 +253,16 @@ in
                 type = types.bool;
                 default = false;
               };
+
+              nodejsPackage = lib.mkOption {
+                description = ''
+                  The nodejs package to use.
+
+                  Added in: 2.1.1.
+                '';
+                type = types.package;
+                default = pkgs.nodejs-14_x;
+              };
             };
           };
         in
@@ -262,6 +271,8 @@ in
             description = ''
               A CTL project declaration, with arbitrarily many bundles, a
               devShell and optional tests.
+
+              In order to use this, your repository must provide the `cardano-transaction-lib` input.
 
               Added in: 2.1.0.
             '';
@@ -274,7 +285,11 @@ in
     perSystem = { config, self', inputs', lib, system, ... }:
       let
         liqwid-nix = self.inputs.liqwid-nix.inputs;
-        ctl-overlays = self.inputs.cardano-transaction-lib.overlays;
+
+        ctl-overlays = assert (lib.assertMsg (self.inputs ? cardano-transaction-lib) ''
+          [liqwid-nix]: liqwid-nix offchain module is being used. Please provide a 'cardano-transaction-lib' input.
+        ''); self.inputs.cardano-transaction-lib.overlays;
+
         projectConfigs = config.offchain;
         utils = import ./utils.nix { inherit pkgs lib; };
 
@@ -294,7 +309,11 @@ in
           then [ ctl-overlays.ctl-server ]
           else [ ];
 
-        pkgs = import liqwid-nix.nixpkgs-ctl {
+        nixpkgs-ctl = assert (lib.assertMsg (self.inputs ? nixpkgs-ctl) ''
+          [liqwid-nix] liqwid-nix offchain module is being used. Please provide a 'nixpkgs-ctl' input, as taken from 'cardano-transaction-lib'.
+        ''); self.inputs.nixpkgs-ctl;
+
+        pkgs = import nixpkgs-ctl {
           inherit system;
           overlays = defaultCtlOverlays ++ additionalOverlays;
         };
@@ -303,6 +322,8 @@ in
 
         makeProject = projectName: projectConfig:
           let
+            nodejsPackage = projectConfig.nodejsPackage;
+
             defaultCommandLineTools = with pkgs; [
               dhall
               easy-ps.purs-tidy
@@ -311,7 +332,7 @@ in
               nodePackages.eslint
               nodePackages.npm
               nodePackages.prettier
-              nodejs
+              nodejsPackage
             ];
 
             commandLineTools =
@@ -324,6 +345,11 @@ in
                   inherit (projectConfig) src;
 
                   inherit projectName;
+
+                  nodejs = nodejsPackage;
+
+                  packageJson = projectConfig.src + "/package.json";
+                  packageLock = projectConfig.src + "/package-lock.json";
 
                   censorCodes = projectConfig.ignoredWarningCodes;
 
@@ -351,14 +377,14 @@ in
             bundleChecks =
               lib.mapAttrs'
                 (bundleName: _: {
-                  name = "${bundleName}_build-check";
+                  name = "build:${bundleName}";
                   value = bundles.${bundleName};
                 })
                 (lib.filterAttrs
                   (_: projectBundle: projectBundle.enableCheck)
                   projectConfig.bundles);
 
-            checks = {
+            checks = bundleChecks // {
               bundle-checks =
                 utils.combineChecks "bundle-checks" bundleChecks;
 
@@ -477,7 +503,7 @@ in
 
         projectChecks =
           lib.filterAttrs (_: check: check != { })
-            (utils.flat2With (project: check: project + "_" + check)
+            (utils.flat2With utils.buildPrefix
               (lib.mapAttrs
                 (_: project: project.checks // { all = project.check; })
                 projects));
