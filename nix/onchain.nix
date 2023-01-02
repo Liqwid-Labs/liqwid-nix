@@ -54,6 +54,14 @@ in
             };
           };
 
+          fourmolu = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "fourmolu" {
+                default = [ "haskell" "packages" "ghc924" "fourmolu_0_9_0_0" ];
+              };
+            };
+          };
+
           shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
@@ -85,6 +93,15 @@ in
                   Added in: 2.0.0.
                 '';
                 type = ghc;
+              };
+
+              fourmolu = lib.mkOption {
+                description = ''
+                  Fourmolu-related options for the on-chain build.
+
+                  Added in: TODO
+                '';
+                type = fourmolu;
               };
 
               shell = lib.mkOption {
@@ -178,7 +195,7 @@ in
             pkgs-latest = import liqwid-nix.nixpkgs-latest { inherit system; };
             pkgs = import liqwid-nix.nixpkgs { inherit system; };
 
-            fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
+            fourmolu = projectConfig.fourmolu.package;
             applyRefact = pkgs.haskell.packages.ghc924.apply-refact_0_10_0_0;
             hlint = pkgs.haskell.packages.ghc924.hlint;
             nixpkgsFmt = pkgs.nixpkgs-fmt;
