@@ -70,6 +70,30 @@ in
             };
           };
 
+          hlint = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "hlint" {
+                default = [ "haskell" "packages" "ghc924" "hlint" ];
+              };
+            };
+          };
+
+          cabalFmt = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "cabal-fmt" {
+                default = [ "haskellPackages" "cabal-fmt" ];
+              };
+            };
+          };
+
+          hasktags = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "hasktags" {
+                default = [ "haskell" "packages" "ghc924" "hasktags" ];
+              };
+            };
+          };
+
           shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
@@ -119,6 +143,33 @@ in
                   Added in: 2.2.0
                 '';
                 type = applyRefact;
+              };
+
+              hlint = lib.mkOption {
+                description = ''
+                  HLint-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = hlint;
+              };
+
+              cabalFmt = lib.mkOption {
+                description = ''
+                  Cabal-fmt-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = cabalFmt;
+              };
+
+              hasktags = lib.mkOption {
+                description = ''
+                  Hasktags-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = hasktags;
               };
 
               shell = lib.mkOption {
@@ -214,10 +265,10 @@ in
 
             fourmolu = projectConfig.fourmolu.package;
             applyRefact = projectConfig.applyRefact.package;
-            hlint = pkgs.haskell.packages.ghc924.hlint;
+            hlint = projectConfig.hlint.package;
             nixpkgsFmt = pkgs.nixpkgs-fmt;
-            cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
-            hasktags = pkgs.haskell.packages.ghc924.hasktags;
+            cabalFmt = projectConfig.cabalFmt.package;
+            hasktags = projectConfig.hasktags.package;
 
             ghc = pkgs.haskell.compiler.${projectConfig.ghc.version};
 
