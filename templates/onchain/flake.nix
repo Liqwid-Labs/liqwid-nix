@@ -31,6 +31,11 @@
           onchain.default = {
             src = ./.;
             ghc.version = "ghc925";
+            fourmolu = { };
+            hlint = { };
+            cabalFmt = { };
+            hasktags = { };
+            applyRefact = { };
             shell = { };
             enableBuildChecks = true;
             extraHackageDeps = [ ];
