@@ -62,6 +62,14 @@ in
             };
           };
 
+          applyRefact = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "apply-refact" {
+                default = [ "haskell" "packages" "ghc924" "apply-refact_0_10_0_0" ];
+              };
+            };
+          };
+
           shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
@@ -102,6 +110,15 @@ in
                   Added in: TODO
                 '';
                 type = fourmolu;
+              };
+
+              applyRefact = lib.mkOption {
+                description = ''
+                  Apply-refact-related options for the on-chain build.
+
+                  Added in: TODO
+                '';
+                type = applyRefact;
               };
 
               shell = lib.mkOption {
@@ -196,7 +213,7 @@ in
             pkgs = import liqwid-nix.nixpkgs { inherit system; };
 
             fourmolu = projectConfig.fourmolu.package;
-            applyRefact = pkgs.haskell.packages.ghc924.apply-refact_0_10_0_0;
+            applyRefact = projectConfig.applyRefact.package;
             hlint = pkgs.haskell.packages.ghc924.hlint;
             nixpkgsFmt = pkgs.nixpkgs-fmt;
             cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
