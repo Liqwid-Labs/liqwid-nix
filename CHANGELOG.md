@@ -2,6 +2,11 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.2.0 - 2023-01-02
+
+- Add `fourmolu.package` and `applyRefact.package` options.
+- This change is breaking due to https://github.com/NixOS/nixpkgs/issues/112494
+
 ## 2.1.1 - 2022-12-26
 
 - Off-chain module requires inputs being passed by project consuming liqwid-nix

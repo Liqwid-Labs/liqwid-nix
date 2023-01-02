@@ -107,7 +107,7 @@ in
                 description = ''
                   Fourmolu-related options for the on-chain build.
 
-                  Added in: TODO
+                  Added in: 2.2.0
                 '';
                 type = fourmolu;
               };
@@ -116,7 +116,7 @@ in
                 description = ''
                   Apply-refact-related options for the on-chain build.
 
-                  Added in: TODO
+                  Added in: 2.2.0
                 '';
                 type = applyRefact;
               };
