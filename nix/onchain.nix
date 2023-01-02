@@ -501,8 +501,14 @@ in
 
         projects = lib.mapAttrs makeProject config.onchain;
 
+        projectPackages =
+          utils.flat2With utils.buildPrefix
+            (lib.mapAttrs
+              (_: project: project.packages)
+              projects);
+
         projectChecks =
-          utils.flat2With (project: check: project + "_" + check)
+          utils.flat2With utils.buildPrefix
             (lib.mapAttrs
               (_: project: project.checks // { all = project.check; })
               projects);
@@ -518,6 +524,8 @@ in
           lib.mapAttrs
             (_: project: project.devShell)
             projects;
+
+        packages = projectPackages;
 
         run = projectScripts;
 
