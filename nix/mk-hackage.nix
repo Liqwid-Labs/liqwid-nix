@@ -86,12 +86,10 @@ rec {
       ${pkgs.haskell-nix.nix-tools.${compiler-nix-name}}/bin/hackage-to-nix $out 01-index.tar "https://mkHackageNix/"
     '';
 
-  copySrc = src: pkgs.runCommand "copied-src-${builtins.baseNameOf src}"
-    {
-      __contentAddressed = true;
-    } ''
-    cp -T -r ${src} $out
-  '';
+  copySrc = src: builtins.path {
+    path = src;
+    name = "copied-src-${builtins.baseNameOf (builtins.unsafeDiscardStringContext src)}";
+  };
 
   mkModule = extraHackagePackages: {
     # Prevent nix-build from trying to download the packages
