@@ -566,6 +566,7 @@ in
               {
                 dependencies = [ hasktags ];
                 script = ''
+                  # shellcheck disable=SC2046
                   hasktags -x ${haskellSources}
                 '';
                 help = ''
