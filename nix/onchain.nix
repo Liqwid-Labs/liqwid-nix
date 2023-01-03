@@ -54,6 +54,46 @@ in
             };
           };
 
+          fourmolu = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "fourmolu" {
+                default = [ "haskell" "packages" "ghc924" "fourmolu_0_9_0_0" ];
+              };
+            };
+          };
+
+          applyRefact = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "apply-refact" {
+                default = [ "haskell" "packages" "ghc924" "apply-refact_0_10_0_0" ];
+              };
+            };
+          };
+
+          hlint = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "hlint" {
+                default = [ "haskell" "packages" "ghc924" "hlint" ];
+              };
+            };
+          };
+
+          cabalFmt = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "cabal-fmt" {
+                default = [ "haskellPackages" "cabal-fmt" ];
+              };
+            };
+          };
+
+          hasktags = types.submodule {
+            options = {
+              package = lib.mkPackageOption pkgs "hasktags" {
+                default = [ "haskell" "packages" "ghc924" "hasktags" ];
+              };
+            };
+          };
+
           shell = types.submodule {
             options = {
               extraCommandLineTools = lib.mkOption {
@@ -85,6 +125,51 @@ in
                   Added in: 2.0.0.
                 '';
                 type = ghc;
+              };
+
+              fourmolu = lib.mkOption {
+                description = ''
+                  Fourmolu-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = fourmolu;
+              };
+
+              applyRefact = lib.mkOption {
+                description = ''
+                  Apply-refact-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = applyRefact;
+              };
+
+              hlint = lib.mkOption {
+                description = ''
+                  HLint-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = hlint;
+              };
+
+              cabalFmt = lib.mkOption {
+                description = ''
+                  Cabal-fmt-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = cabalFmt;
+              };
+
+              hasktags = lib.mkOption {
+                description = ''
+                  Hasktags-related options for the on-chain build.
+
+                  Added in: 2.2.0
+                '';
+                type = hasktags;
               };
 
               shell = lib.mkOption {
@@ -178,12 +263,12 @@ in
             pkgs-latest = import liqwid-nix.nixpkgs-latest { inherit system; };
             pkgs = import liqwid-nix.nixpkgs { inherit system; };
 
-            fourmolu = pkgs-latest.haskell.packages.ghc924.fourmolu_0_9_0_0;
-            applyRefact = pkgs.haskell.packages.ghc924.apply-refact_0_10_0_0;
-            hlint = pkgs.haskell.packages.ghc924.hlint;
+            fourmolu = projectConfig.fourmolu.package;
+            applyRefact = projectConfig.applyRefact.package;
+            hlint = projectConfig.hlint.package;
             nixpkgsFmt = pkgs.nixpkgs-fmt;
-            cabalFmt = pkgs-latest.haskellPackages.cabal-fmt;
-            hasktags = pkgs.haskell.packages.ghc924.hasktags;
+            cabalFmt = projectConfig.cabalFmt.package;
+            hasktags = projectConfig.hasktags.package;
 
             ghc = pkgs.haskell.compiler.${projectConfig.ghc.version};
 
