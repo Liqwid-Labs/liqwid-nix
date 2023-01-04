@@ -413,7 +413,7 @@ in
                   projectConfig.enableFormatCheck
                   (pkgs.runCommand "formatting-check"
                     {
-                      nativeBuildInputs = commandLineTools;
+                      nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
                     }
                     ''
                       cd ${self}
@@ -428,7 +428,7 @@ in
                   projectConfig.enableJsLintCheck
                   (pkgs.runCommand "js-lint-check"
                     {
-                      nativeBuildInputs = commandLineTools;
+                      nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
                     }
                     ''
                       cd ${self}
