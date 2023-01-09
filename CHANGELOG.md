@@ -2,6 +2,12 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.2.1 - 2023-01-09
+
+- Minor fixes to off-chain module.
+
+- Dropped the Plutonomicon cache.
+
 ## 2.2.0 - 2023-01-02
 
 - Add `fourmolu.package`, `applyRefact.package`, `hlint.package`,
