@@ -366,7 +366,8 @@ in
               (name: bundle: project.bundlePursProject {
                 inherit (bundle)
                   bundledModuleName
-                  webpackConfig;
+                  webpackConfig
+                  browserRuntime;
                 inherit name;
 
                 main = bundle.mainModule;
