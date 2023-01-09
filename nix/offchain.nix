@@ -366,7 +366,8 @@ in
               (name: bundle: project.bundlePursProject {
                 inherit (bundle)
                   bundledModuleName
-                  webpackConfig;
+                  webpackConfig
+                  browserRuntime;
                 inherit name;
 
                 main = bundle.mainModule;
@@ -413,7 +414,7 @@ in
                   projectConfig.enableFormatCheck
                   (pkgs.runCommand "formatting-check"
                     {
-                      nativeBuildInputs = commandLineTools;
+                      nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
                     }
                     ''
                       cd ${self}
@@ -428,7 +429,7 @@ in
                   projectConfig.enableJsLintCheck
                   (pkgs.runCommand "js-lint-check"
                     {
-                      nativeBuildInputs = commandLineTools;
+                      nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
                     }
                     ''
                       cd ${self}
