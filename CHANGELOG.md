@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.2.2 - 2023-01-14
+
+- Off-chain `spago bundle-module` output inclusion workaround.
+
 ## 2.2.1 - 2023-01-09
 
 - Minor fixes to off-chain module.

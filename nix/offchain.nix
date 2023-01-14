@@ -33,74 +33,86 @@ in
             types.strMatching
               ''[[:upper:]][[:alnum:]]*(\.[[:upper:]][[:alnum:]]*)*'';
 
-          bundle = types.submodule {
-            options = {
-              mainModule = lib.mkOption {
-                description = ''
-                  The main Purescript module for the bundle (for instance, 'Main').
+          bundle = types.submodule
+            {
+              options = {
+                mainModule = lib.mkOption {
+                  description = ''
+                    The main Purescript module for the bundle (for instance, 'Main').
 
-                  Added in: 2.1.0.
-                '';
-                type = purescriptModule;
-              };
+                    Added in: 2.1.0.
+                  '';
+                  type = purescriptModule;
+                };
 
-              entrypointJs = lib.mkOption {
-                description = ''
-                  Stringified path to the webpack `entrypoint` file.
+                entrypointJs = lib.mkOption {
+                  description = ''
+                    Stringified path to the webpack `entrypoint` file.
 
-                  Added in: 2.1.0.
-                '';
+                    Added in: 2.1.0.
+                  '';
 
-                # NOTE: ideally, this would be a types.path, but it's easier to
-                # conform to CTL's types.
-                type = types.str;
-                default = "index.js";
-              };
+                  # NOTE: ideally, this would be a types.path, but it's easier to
+                  # conform to CTL's types.
+                  type = types.str;
+                  default = "index.js";
+                };
 
-              browserRuntime = lib.mkOption {
-                description = ''
-                  Whether this bundle is being produced for a browser environment or
-                  not.
+                browserRuntime = lib.mkOption {
+                  description = ''
+                    Whether this bundle is being produced for a browser environment or
+                    not.
 
-                  Added in: 2.1.0.
-                '';
-                type = types.bool;
-                default = true;
-              };
+                    Added in: 2.1.0.
+                  '';
+                  type = types.bool;
+                  default = true;
+                };
 
-              webpackConfig = lib.mkOption {
-                description = ''
-                  Stringified path to the Webpack config file to use.
+                webpackConfig = lib.mkOption {
+                  description = ''
+                    Stringified path to the Webpack config file to use.
 
-                  Added in: 2.1.0.
-                '';
-                type = types.str;
-                default = "webpack.config.js";
-              };
+                    Added in: 2.1.0.
+                  '';
+                  type = types.str;
+                  default = "webpack.config.js";
+                };
 
-              bundledModuleName = lib.mkOption {
-                description = ''
-                  The name of the file containing the bundled JS module that
-                  `spago bundle-module` will produce.
+                bundledModuleName = lib.mkOption {
+                  description = ''
+                    The name of the file containing the bundled JS module that
+                    `spago bundle-module` will produce.
 
-                  Added in: 2.1.0.
-                '';
-                type = types.str;
-                default = "output.js";
-              };
+                    Added in: 2.1.0.
+                  '';
+                  type = types.str;
+                  default = "output.js";
+                };
 
-              enableCheck = lib.mkOption {
-                description = ''
-                  Whether to add a flake check testing that the bundle builds
-                  correctly.
+                enableCheck = lib.mkOption {
+                  description = ''
+                    Whether to add a flake check testing that the bundle builds
+                    correctly.
 
-                  Added in: 2.1.0.
-                '';
-                type = types.bool;
-                default = false;
+                    Added in: 2.1.0.
+                  '';
+                  type = types.bool;
+                  default = false;
+                };
+
+                includeBundledModule = lib.mkOption {
+                  description = ''
+                    Whether to include the spago bundle-module output in `dist` in the bundle.
+
+                    Added in: 2.2.2.
+                  '';
+                  type = types.bool;
+                  # This can be default true because it's basically free.
+                  default = true;
+                };
               };
             };
-          };
 
           testConfigs = types.submodule {
             options = {
@@ -318,6 +330,69 @@ in
           overlays = defaultCtlOverlays ++ additionalOverlays;
         };
 
+        # NOTE(Emily, 13 Jan 2023): This is currently semi-vendored from CTL. This shouldn't be necessary
+        # once we are on a more recent version that supports including the spago result in the bundle.
+        # 
+        # The exact difference here is what is specified by 'includeBundledModule'. Additionally,
+        # some work has been done to ensure this can work while being outside of the context of the
+        # 'project' scope (by taking 'project' as an argument).
+        #
+        # This workaround will no longer be necessary as soon as the PR is merged and we are up to date:
+        # https://github.com/Plutonomicon/cardano-transaction-lib/pull/1396
+        #
+        # Bundles a Purescript project using Webpack, typically for the browser
+        bundlePursProject =
+          {
+            # Can be used to override the name given to the resulting derivation
+            name
+            # The Webpack `entrypoint`
+          , entrypoint ? "index.js"
+            # The main Purescript module
+          , main ? "Main"
+            # If this bundle is being produced for a browser environment or not
+          , browserRuntime ? true
+            # Path to the Webpack config to use
+          , webpackConfig ? "webpack.config.js"
+            # The name of the bundled JS module that `spago bundle-module` will produce
+          , bundledModuleName ? "output.js"
+            # Generated `node_modules` in the Nix store. Can be passed to have better
+            # control over individual project components
+          , nodeModules ? project.nodeModules
+            # If the spago bundle-module output should be included in the derivation
+          , includeBundledModule ? false
+            # The project object
+          , project
+          , ...
+          }:
+          pkgs.runCommand "${name}"
+            {
+              buildInputs = [
+                project.nodejs
+                nodeModules
+                project.compiled
+              ];
+              nativeBuildInputs = [
+                pkgs.easy-ps.purs-0_14_5
+                pkgs.easy-ps.spago
+              ];
+            }
+            ''
+              export HOME="$TMP"
+              export NODE_PATH="${nodeModules}/lib/node_modules"
+              export PATH="${nodeModules}/bin:$PATH"
+              ${pkgs.lib.optionalString browserRuntime "export BROWSER_RUNTIME=1"}
+              cp -r ${project.compiled}/* .
+              chmod -R +rwx .
+              spago bundle-module --no-install --no-build -m "${main}" \
+                --to ${bundledModuleName}
+              mkdir ./dist
+              ${pkgs.lib.optionalString includeBundledModule "cp ${bundledModuleName} ./dist"}
+              webpack --mode=production -c ${webpackConfig} -o ./dist \
+                --entry ./${entrypoint}
+              mkdir $out
+              mv dist $out
+            '';
+
         # ----------------------------------------------------------------------
 
         makeProject = projectName: projectConfig:
@@ -363,12 +438,13 @@ in
               pkgSet;
 
             bundles = (lib.mapAttrs
-              (name: bundle: project.bundlePursProject {
+              (name: bundle: bundlePursProject {
                 inherit (bundle)
                   bundledModuleName
                   webpackConfig
+                  includeBundledModule
                   browserRuntime;
-                inherit name;
+                inherit name project;
 
                 main = bundle.mainModule;
                 entrypoint = bundle.entrypointJs;

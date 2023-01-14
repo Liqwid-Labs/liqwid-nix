@@ -4,6 +4,6 @@
 
 ### Tested on
 - [ ] [agora](https://github.com/Liqwid-Labs/agora)
-- [ ] [liqwid-plutarch-extra](https://github.com/Liqwid-Labs/liqwid-plutarch-extra)
-- [ ] [plutarch-context-builder](https://github.com/Liqwid-Labs/plutarch-context-builder)
+- [ ] [liqwid-libs](https://github.com/Liqwid-Labs/liqwid-libs)
+- [ ] [oracle-offchain](https://github.com/Liqwid-Labs/oracle-offchain)
 - [ ] ...
