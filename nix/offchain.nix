@@ -432,6 +432,9 @@ in
                     withRuntime = true;
                     packageLockOnly = true;
                     packages = commandLineTools;
+                    shellHook = ''
+                      liqwid(){ c=$1; shift; nix run .#$c -- $@; }
+                    '';
                   };
                 };
               in
@@ -461,49 +464,55 @@ in
                   (_: projectBundle: projectBundle.enableCheck)
                   projectConfig.bundles);
 
-            checks = bundleChecks // {
-              bundle-checks =
-                utils.combineChecks "bundle-checks" bundleChecks;
 
-              tests =
-                lib.ifEnable
-                  (projectConfig ? tests)
+            purescriptCheck = lib.ifEnable
+              (projectConfig ? tests)
+              {
+                tests =
                   (project.runPursTest {
                     inherit (projectConfig.tests)
                       sources
                       buildInputs
                       testMain;
                   });
+              };
 
-              plutip-tests =
-                lib.ifEnable
-                  (projectConfig ? plutip)
-                  (project.runPlutipTest {
-                    inherit (projectConfig.plutip)
-                      sources
-                      buildInputs
-                      testMain;
-                  });
+            plutipCheck =
+              lib.ifEnable
+                (projectConfig ? plutip)
+                {
+                  plutip-tests =
+                    (project.runPlutipTest {
+                      inherit (projectConfig.plutip)
+                        sources
+                        buildInputs
+                        testMain;
+                    });
+                };
 
-              formatting-check =
-                lib.ifEnable
-                  projectConfig.enableFormatCheck
-                  (pkgs.runCommand "formatting-check"
-                    {
-                      nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
-                    }
-                    ''
-                      cd ${self}
-                      purs-tidy check $(fd -epurs)
-                      nixpkgs-fmt --check $(fd -enix --exclude='spago*')
-                      prettier -c $(fd -ejs)
-                      touch $out
-                    '');
+            formattingCheck =
+              lib.ifEnable
+                projectConfig.enableFormatCheck
+                {
+                  formatting-check =
+                    (pkgs.runCommand "formatting-check"
+                      {
+                        nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
+                      }
+                      ''
+                        cd ${self}
+                        purs-tidy check $(fd -epurs)
+                        nixpkgs-fmt --check $(fd -enix --exclude='spago*')
+                        prettier -c $(fd -ejs)
+                        touch $out
+                      '');
+                };
 
-              js-lint-check =
-                lib.ifEnable
-                  projectConfig.enableJsLintCheck
-                  (pkgs.runCommand "js-lint-check"
+            jsLintCheck =
+              lib.ifEnable
+                projectConfig.enableJsLintCheck
+                {
+                  js-lint-check = (pkgs.runCommand "js-lint-check"
                     {
                       nativeBuildInputs = commandLineTools ++ [ project.nodeModules ];
                     }
@@ -512,7 +521,19 @@ in
                       eslint $(fd -ejs)
                       touch $out
                     '');
-            };
+                };
+
+            checks = lib.fold lib.mergeAttrs { } [
+              bundleChecks
+              ({
+                bundle-checks =
+                  utils.combineChecks "bundle-checks" bundleChecks;
+              })
+              purescriptCheck
+              plutipCheck
+              formattingCheck
+              jsLintCheck
+            ];
 
             ctlRuntimeConfig = projectConfig.runtime.extraConfig // {
               ctlServer.enable = projectConfig.runtime.enableCtlServer;
