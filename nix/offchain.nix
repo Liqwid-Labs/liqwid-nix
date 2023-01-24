@@ -175,6 +175,18 @@ in
                 type = types.attrsOf types.anything;
                 default = { };
               };
+
+              exposeConfig = lib.mkOption {
+                description = ''
+                  Whether to expose the runtime config as an attribute set in
+                  `packages`. Config is not an package so you may want to set it
+                  to false.
+
+                  Added in: 2.3.0.
+                '';
+                type = types.bool;
+                default = true;
+              };
             };
           };
 
@@ -560,9 +572,10 @@ in
             };
           in
           {
-            packages = {
-              ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { };
-            } // bundles;
+            packages = bundles //
+              (if projectConfig.runtime.exposeConfig
+              then { ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { }; }
+              else { });
 
             run.nixFormat =
               {
