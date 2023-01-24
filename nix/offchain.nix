@@ -190,6 +190,15 @@ in
                 type = types.path;
               };
 
+              pkgs = lib.mkOption {
+                description = ''
+                  Package set to use. If specified, you must also manually apply
+                  CTL overlays.
+                '';
+                default = null;
+                type = types.nullOr (types.raw or types.unspecified);
+              };
+
               ignoredWarningCodes = lib.mkOption {
                 description = ''
                   Warnings from `purs` to silence during compilation.
@@ -303,7 +312,7 @@ in
         });
   };
   config = {
-    perSystem = { config, self', inputs', lib, system, ... }:
+    perSystem = { config, self', inputs', pkgs, lib, system, ... }:
       let
         liqwid-nix = self.inputs.liqwid-nix.inputs;
 
@@ -333,11 +342,6 @@ in
         nixpkgs-ctl = assert (lib.assertMsg (self.inputs ? nixpkgs-ctl) ''
           [liqwid-nix] liqwid-nix offchain module is being used. Please provide a 'nixpkgs-ctl' input, as taken from 'cardano-transaction-lib'.
         ''); self.inputs.nixpkgs-ctl;
-
-        pkgs = import nixpkgs-ctl {
-          inherit system;
-          overlays = defaultCtlOverlays ++ additionalOverlays;
-        };
 
         # NOTE(Emily, 13 Jan 2023): This is currently semi-vendored from CTL. This shouldn't be necessary
         # once we are on a more recent version that supports including the spago result in the bundle.
@@ -371,6 +375,7 @@ in
           , includeBundledModule ? false
             # The project object
           , project
+          , pkgs
           , ...
           }:
           pkgs.runCommand "${name}"
@@ -406,6 +411,11 @@ in
 
         makeProject = projectName: projectConfig:
           let
+            pkgs = projectConfig.pkgs or (import nixpkgs-ctl {
+              inherit system;
+              overlays = defaultCtlOverlays ++ additionalOverlays;
+            });
+
             nodejsPackage = projectConfig.nodejsPackage;
 
             defaultCommandLineTools = with pkgs; [
@@ -428,7 +438,7 @@ in
                 pkgSet = pkgs.purescriptProject {
                   inherit (projectConfig) src;
 
-                  inherit projectName;
+                  inherit projectName pkgs;
 
                   nodejs = nodejsPackage;
 
@@ -457,7 +467,7 @@ in
                   webpackConfig
                   includeBundledModule
                   browserRuntime;
-                inherit name project;
+                inherit name project pkgs;
 
                 main = bundle.mainModule;
                 entrypoint = bundle.entrypointJs;
