@@ -179,7 +179,7 @@ in
               exposeConfig = lib.mkOption {
                 description = ''
                   Whether to expose the runtime config as an attribute set in
-                  `packages`. Config is not an package so you may want to set it
+                  `packages`. Config is not a package so you may want to set it
                   to false.
 
                   Added in: 2.3.0.
