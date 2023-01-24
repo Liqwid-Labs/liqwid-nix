@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.3.0 - 2023-01-23
+
+- Added `shell.shellHook` option in offchain module
+
 ## 2.2.2 - 2023-01-16
 
 - Fixed off-chain checks.

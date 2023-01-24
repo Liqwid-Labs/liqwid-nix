@@ -23,6 +23,15 @@ in
                 '';
                 default = [ ];
               };
+              shellHook = lib.mkOption {
+                type = types.lines;
+                description = ''
+                  Shell code to run when the shell is started.
+
+                  Added in: 2.3.0.
+                '';
+                default = "";
+              };
             };
           };
 
@@ -434,7 +443,8 @@ in
                     packages = commandLineTools;
                     shellHook = ''
                       liqwid(){ c=$1; shift; nix run .#$c -- $@; }
-                    '';
+                    ''
+                    + projectConfig.shell.shellHook;
                   };
                 };
               in
