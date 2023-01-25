@@ -604,6 +604,8 @@ in
             (lib.mapAttrs
               (_: project: project.run)
               projects);
+
+        moduleUsed = projectChecks != { };
       in
       {
         devShells =
@@ -615,9 +617,9 @@ in
 
         run = projectScripts;
 
-        checks = projectChecks // {
+        checks = (projectChecks // (lib.ifEnable moduleUsed {
           all_onchain = utils.combineChecks "all_onchain" projectChecks;
-        };
+        }));
       };
   };
 }
