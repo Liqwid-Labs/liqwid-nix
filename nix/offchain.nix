@@ -206,6 +206,8 @@ in
                 description = ''
                   Package set to use. If specified, you must also manually apply
                   CTL overlays.
+                  
+                  Added in: 2.3.0.
                 '';
                 default = null;
                 type = types.nullOr (types.raw or types.unspecified);
