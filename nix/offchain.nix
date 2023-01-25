@@ -611,6 +611,8 @@ in
             (lib.mapAttrs
               (_: project: project.run)
               projects);
+
+        moduleUsed = projectChecks != { };
       in
       {
         packages =
@@ -627,9 +629,9 @@ in
               (_: project: project.apps)
               projects);
 
-        checks = projectChecks // {
+        checks = projectChecks // (lib.ifEnable moduleUsed {
           all_offchain = utils.combineChecks "all_offchain" projectChecks;
-        };
+        });
 
         devShells = lib.mapAttrs (_: project: project.devShell) projects;
       };
