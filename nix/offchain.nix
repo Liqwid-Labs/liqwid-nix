@@ -23,6 +23,15 @@ in
                 '';
                 default = [ ];
               };
+              shellHook = lib.mkOption {
+                type = types.lines;
+                description = ''
+                  Shell code to run when the shell is started.
+
+                  Added in: 2.3.0.
+                '';
+                default = "";
+              };
             };
           };
 
@@ -166,6 +175,18 @@ in
                 type = types.attrsOf types.anything;
                 default = { };
               };
+
+              exposeConfig = lib.mkOption {
+                description = ''
+                  Whether to expose the runtime config as an attribute set in
+                  `packages`. Config is not a package so you may want to set it
+                  to false.
+
+                  Added in: 2.3.0.
+                '';
+                type = types.bool;
+                default = true;
+              };
             };
           };
 
@@ -179,6 +200,17 @@ in
                   Added in: 2.1.0.
                 '';
                 type = types.path;
+              };
+
+              pkgs = lib.mkOption {
+                description = ''
+                  Package set to use. If specified, you must also manually apply
+                  CTL overlays.
+                  
+                  Added in: 2.3.0.
+                '';
+                default = null;
+                type = types.nullOr (types.raw or types.unspecified);
               };
 
               ignoredWarningCodes = lib.mkOption {
@@ -294,7 +326,7 @@ in
         });
   };
   config = {
-    perSystem = { config, self', inputs', lib, system, ... }:
+    perSystem = { config, self', inputs', pkgs, lib, system, ... }:
       let
         liqwid-nix = self.inputs.liqwid-nix.inputs;
 
@@ -324,11 +356,6 @@ in
         nixpkgs-ctl = assert (lib.assertMsg (self.inputs ? nixpkgs-ctl) ''
           [liqwid-nix] liqwid-nix offchain module is being used. Please provide a 'nixpkgs-ctl' input, as taken from 'cardano-transaction-lib'.
         ''); self.inputs.nixpkgs-ctl;
-
-        pkgs = import nixpkgs-ctl {
-          inherit system;
-          overlays = defaultCtlOverlays ++ additionalOverlays;
-        };
 
         # NOTE(Emily, 13 Jan 2023): This is currently semi-vendored from CTL. This shouldn't be necessary
         # once we are on a more recent version that supports including the spago result in the bundle.
@@ -362,6 +389,7 @@ in
           , includeBundledModule ? false
             # The project object
           , project
+          , pkgs
           , ...
           }:
           pkgs.runCommand "${name}"
@@ -397,6 +425,11 @@ in
 
         makeProject = projectName: projectConfig:
           let
+            pkgs = projectConfig.pkgs or (import nixpkgs-ctl {
+              inherit system;
+              overlays = defaultCtlOverlays ++ additionalOverlays;
+            });
+
             nodejsPackage = projectConfig.nodejsPackage;
 
             defaultCommandLineTools = with pkgs; [
@@ -419,7 +452,7 @@ in
                 pkgSet = pkgs.purescriptProject {
                   inherit (projectConfig) src;
 
-                  inherit projectName;
+                  inherit projectName pkgs;
 
                   nodejs = nodejsPackage;
 
@@ -434,7 +467,8 @@ in
                     packages = commandLineTools;
                     shellHook = ''
                       liqwid(){ c=$1; shift; nix run .#$c -- $@; }
-                    '';
+                    ''
+                    + projectConfig.shell.shellHook;
                   };
                 };
               in
@@ -447,7 +481,7 @@ in
                   webpackConfig
                   includeBundledModule
                   browserRuntime;
-                inherit name project;
+                inherit name project pkgs;
 
                 main = bundle.mainModule;
                 entrypoint = bundle.entrypointJs;
@@ -540,9 +574,10 @@ in
             };
           in
           {
-            packages = {
-              ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { };
-            } // bundles;
+            packages = bundles //
+              (if projectConfig.runtime.exposeConfig
+              then { ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { }; }
+              else { });
 
             run.nixFormat =
               {
