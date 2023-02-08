@@ -6,6 +6,8 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
 - Added option (`spagoOverride`) to offchain module. This allows one to use package from flake instead of pulling from git when building derviation. This resolves problem from CI where CI machine fails to pull from private repository via ssh.
 
+- Fix a bug in the offchain module caused by 2.3.0 which required specifying `pkgs`.
+
 ## 2.3.0 - 2023-01-25
 
 - Added `shell.shellHook`, `pkgs`, and `runtime.exposeConfig` options in offchain module
