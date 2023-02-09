@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.3.1 - 2023-02-09
+
+- Added option (`spagoOverride`) to offchain module. This allows one to use package from flake instead of pulling from git when building derviation. This resolves problem from CI where CI machine fails to pull from private repository via ssh.
+
 ## 2.3.0 - 2023-01-25
 
 - Added `shell.shellHook`, `pkgs`, and `runtime.exposeConfig` options in offchain module
@@ -30,9 +34,9 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
 - Off-chain module requires inputs being passed by project consuming liqwid-nix
   instead of being provided by liqwid-nix directly.
-  
+
   This reduces inputs and as a result flake.lock size.
-  
+
 ## 2.1.0 - 2022-12-21
 
 - Add an off-chain module for CTL projects.
@@ -56,8 +60,8 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
   Major differences:
 
-  - Configuring uses modular system, which requires a few more nix files, 
-    but it allows simultaneously having off-chain and on-chain in a single 
+  - Configuring uses modular system, which requires a few more nix files,
+    but it allows simultaneously having off-chain and on-chain in a single
     repository.
 
   - Most flake inputs are managed inside of liqwid-nix instead of the projects

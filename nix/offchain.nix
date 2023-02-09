@@ -190,6 +190,18 @@ in
             };
           };
 
+          # Inorder to use as a spago module, it most be a store path to the
+          # spago module repository, and must have git revison that is for
+          # ensuring version.
+          spagoModule = lib.mkOptionType {
+            name = "spagoModule";
+            description = "noun";
+            check = x:
+              lib.isStorePath x
+              && builtins.isAttrs x
+              && builtins.hasAttr "rev" x;
+          };
+
           project = types.submodule {
             options = {
               src = lib.mkOption {
@@ -206,11 +218,21 @@ in
                 description = ''
                   Package set to use. If specified, you must also manually apply
                   CTL overlays.
-                  
+
                   Added in: 2.3.0.
                 '';
                 default = null;
                 type = types.nullOr (types.raw or types.unspecified);
+              };
+
+              spagoOverride = lib.mkOption {
+                description = ''
+                  Override `packages.dhall` and use given flake for spago module.
+
+                  Added in: 2.3.1.
+                '';
+                type = types.attrsOf spagoModule;
+                default = { };
               };
 
               ignoredWarningCodes = lib.mkOption {
@@ -246,7 +268,7 @@ in
               plutip = lib.mkOption {
                 description = ''
                   Options to configure the project's Plutip suite. If defined,
-                  a flake check will be created which runs the tests. 
+                  a flake check will be created which runs the tests.
 
                   Added in: 2.1.0.
                 '';
@@ -359,7 +381,7 @@ in
 
         # NOTE(Emily, 13 Jan 2023): This is currently semi-vendored from CTL. This shouldn't be necessary
         # once we are on a more recent version that supports including the spago result in the bundle.
-        # 
+        #
         # The exact difference here is what is specified by 'includeBundledModule'. Additionally,
         # some work has been done to ensure this can work while being outside of the context of the
         # 'project' scope (by taking 'project' as an argument).
@@ -425,10 +447,14 @@ in
 
         makeProject = projectName: projectConfig:
           let
-            pkgs = projectConfig.pkgs or (import nixpkgs-ctl {
-              inherit system;
-              overlays = defaultCtlOverlays ++ additionalOverlays;
-            });
+            inherit (projectConfig) src;
+            pkgs =
+              if projectConfig.pkgs == null then
+                (import nixpkgs-ctl {
+                  inherit system;
+                  overlays = defaultCtlOverlays ++ additionalOverlays;
+                })
+              else projectConfig.pkgs;
 
             nodejsPackage = projectConfig.nodejsPackage;
 
@@ -447,6 +473,88 @@ in
               defaultCommandLineTools
               ++ projectConfig.shell.extraCommandLineTools;
 
+            # CTL only accepts nix file for spago packages... :/
+            fixedSpagoPackages =
+              let overrides =
+                    builtins.concatStringsSep "\n"
+                      (builtins.attrValues
+                        (builtins.mapAttrs
+                          (name: value:
+                            ''
+"${name}" =
+let
+  der = pkgs.stdenv.mkDerivation {
+          name = "${name}";
+          version = "${value.rev}";
+          src = ${value};
+          phases = "installPhase";
+          installPhase = "ln -s $src $out";
+  };
+in if spago-packages.inputs.${name}.version == "${value.rev}" then der else
+builtins.throw "${name}: version does not match. At 'package.dhall': ''${spago-packages.inputs.${name}.version}. At flake: ${value.rev}";
+                            ''
+                          )
+                        projectConfig.spagoOverride));
+              in pkgs.writeText "fixed-spago-packages.nix"
+                ''
+{ pkgs ? import <nixpkgs> {} }:
+let
+  spago-packages = import ${src}/spago-packages.nix {inherit pkgs;};
+  cpPackage = pkg:
+    let
+      target = ".spago/''${pkg.name}/''${pkg.version}";
+    in '''
+      if [ ! -e ''${target} ]; then
+        echo "Installing ''${target}."
+        mkdir -p ''${target}
+        cp --no-preserve=mode,ownership,timestamp -r ''${toString pkg.outPath}/* ''${target}
+      else
+        echo "''${target} already exists. Skipping."
+      fi
+    ''';
+  getGlob = pkg: ".spago/''${pkg.name}/''${pkg.version}/src/**/*.purs";
+  getStoreGlob = pkg: "''${pkg.outPath}/src/**/*.purs";
+in rec {
+  inputs = spago-packages.inputs // {
+${overrides}
+  };
+  installSpagoStyle = pkgs.writeShellScriptBin "install-spago-style" '''
+      set -e
+      echo installing dependencies...
+      ''${builtins.toString (builtins.map cpPackage (builtins.attrValues inputs))}
+      echo "echo done."
+  ''';
+  buildSpagoStyle = pkgs.writeShellScriptBin "build-spago-style" '''
+      set -e
+      echo building project...
+      purs compile ''${builtins.toString (builtins.map getGlob (builtins.attrValues inputs))} "$@"
+      echo done.
+  ''';
+  buildFromNixStore = pkgs.writeShellScriptBin "build-from-store" '''
+      set -e
+      echo building project using sources from nix store...
+      purs compile ''${builtins.toString (
+        builtins.map getStoreGlob (builtins.attrValues inputs))} "$@"
+      echo done.
+  ''';
+  mkBuildProjectOutput =
+    { src, purs }:
+    pkgs.stdenv.mkDerivation {
+      name = "build-project-output";
+      src = src;
+      buildInputs = [ purs ];
+      installPhase = '''
+        mkdir -p $out
+        purs compile "$src/**/*.purs" ''${builtins.toString
+          (builtins.map
+            (x: '''"''${x.outPath}/src/**/*.purs"''')
+            (builtins.attrValues inputs))}
+        mv output $out
+      ''';
+    };
+}
+                '';
+
             project =
               let
                 pkgSet = pkgs.purescriptProject {
@@ -460,6 +568,8 @@ in
                   packageLock = projectConfig.src + "/package-lock.json";
 
                   censorCodes = projectConfig.ignoredWarningCodes;
+
+                  spagoPackages = fixedSpagoPackages;
 
                   shell = {
                     withRuntime = true;
