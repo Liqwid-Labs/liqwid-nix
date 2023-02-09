@@ -195,7 +195,7 @@ in
           # ensuring version.
           spagoModule = lib.mkOptionType {
             name = "spagoModule";
-            description = "noun";
+            description = "A flake input of spago module";
             check = x:
               lib.isStorePath x
               && builtins.isAttrs x
