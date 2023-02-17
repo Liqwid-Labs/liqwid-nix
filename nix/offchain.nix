@@ -185,7 +185,7 @@ in
                   Added in: 2.3.0.
                 '';
                 type = types.bool;
-                default = true;
+                default = false;
               };
             };
           };
