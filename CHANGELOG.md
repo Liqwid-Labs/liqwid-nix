@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.4.0 - 2023-02-17
+
+- Default `exposeConfig` to `false` in offchain module
+
 ## 2.3.1 - 2023-02-09
 
 - Added option (`spagoOverride`) to offchain module. This allows one to use package from flake instead of pulling from git when building derviation. This resolves problem from CI where CI machine fails to pull from private repository via ssh.
