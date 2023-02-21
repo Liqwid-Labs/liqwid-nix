@@ -414,6 +414,7 @@ in
           , pkgs
           , ...
           }:
+
           pkgs.runCommand "${name}"
             {
               buildInputs = [
@@ -475,84 +476,86 @@ in
 
             # CTL only accepts nix file for spago packages... :/
             fixedSpagoPackages =
-              let overrides =
-                    builtins.concatStringsSep "\n"
-                      (builtins.attrValues
-                        (builtins.mapAttrs
-                          (name: value:
-                            ''
-"${name}" =
-let
-  der = pkgs.stdenv.mkDerivation {
-          name = "${name}";
-          version = "${value.rev}";
-          src = ${value};
-          phases = "installPhase";
-          installPhase = "ln -s $src $out";
-  };
-in if spago-packages.inputs.${name}.version == "${value.rev}" then der else
-builtins.throw "${name}: version does not match. At 'package.dhall': ''${spago-packages.inputs.${name}.version}. At flake: ${value.rev}";
-                            ''
-                          )
+              let
+                overrides =
+                  builtins.concatStringsSep "\n"
+                    (builtins.attrValues
+                      (builtins.mapAttrs
+                        (name: value:
+                          ''
+                            "${name}" =
+                            let
+                              der = pkgs.stdenv.mkDerivation {
+                                      name = "${name}";
+                                      version = "${value.rev}";
+                                      src = ${value};
+                                      phases = "installPhase";
+                                      installPhase = "ln -s $src $out";
+                              };
+                            in if spago-packages.inputs.${name}.version == "${value.rev}" then der else
+                            builtins.throw "${name}: version does not match. At 'package.dhall': ''${spago-packages.inputs.${name}.version}. At flake: ${value.rev}";
+                          ''
+                        )
                         projectConfig.spagoOverride));
-              in pkgs.writeText "fixed-spago-packages.nix"
+              in
+              pkgs.writeText "fixed-spago-packages.nix"
                 ''
-{ pkgs ? import <nixpkgs> {} }:
-let
-  spago-packages = import ${src}/spago-packages.nix {inherit pkgs;};
-  cpPackage = pkg:
-    let
-      target = ".spago/''${pkg.name}/''${pkg.version}";
-    in '''
-      if [ ! -e ''${target} ]; then
-        echo "Installing ''${target}."
-        mkdir -p ''${target}
-        cp --no-preserve=mode,ownership,timestamp -r ''${toString pkg.outPath}/* ''${target}
-      else
-        echo "''${target} already exists. Skipping."
-      fi
-    ''';
-  getGlob = pkg: ".spago/''${pkg.name}/''${pkg.version}/src/**/*.purs";
-  getStoreGlob = pkg: "''${pkg.outPath}/src/**/*.purs";
-in rec {
-  inputs = spago-packages.inputs // {
-${overrides}
-  };
-  installSpagoStyle = pkgs.writeShellScriptBin "install-spago-style" '''
-      set -e
-      echo installing dependencies...
-      ''${builtins.toString (builtins.map cpPackage (builtins.attrValues inputs))}
-      echo "echo done."
-  ''';
-  buildSpagoStyle = pkgs.writeShellScriptBin "build-spago-style" '''
-      set -e
-      echo building project...
-      purs compile ''${builtins.toString (builtins.map getGlob (builtins.attrValues inputs))} "$@"
-      echo done.
-  ''';
-  buildFromNixStore = pkgs.writeShellScriptBin "build-from-store" '''
-      set -e
-      echo building project using sources from nix store...
-      purs compile ''${builtins.toString (
-        builtins.map getStoreGlob (builtins.attrValues inputs))} "$@"
-      echo done.
-  ''';
-  mkBuildProjectOutput =
-    { src, purs }:
-    pkgs.stdenv.mkDerivation {
-      name = "build-project-output";
-      src = src;
-      buildInputs = [ purs ];
-      installPhase = '''
-        mkdir -p $out
-        purs compile "$src/**/*.purs" ''${builtins.toString
-          (builtins.map
-            (x: '''"''${x.outPath}/src/**/*.purs"''')
-            (builtins.attrValues inputs))}
-        mv output $out
-      ''';
-    };
-}
+                  { pkgs ? import <nixpkgs> {} }:
+                  let
+                    spago-packages = import ${src}/spago-packages.nix {inherit pkgs;};
+                    cpPackage = pkg:
+                      let
+                        target = ".spago/''${pkg.name}/''${pkg.version}";
+                      in '''
+                        if [ ! -e ''${target} ]; then
+                          echo "Installing ''${target}."
+                          mkdir -p ''${target}
+                          cp --no-preserve=mode,ownership,timestamp -r ''${toString pkg.outPath}/* ''${target}
+                        else
+                          echo "''${target} already exists. Skipping."
+                        fi
+                      ''';
+                    getGlob = pkg: ".spago/''${pkg.name}/''${pkg.version}/src/**/*.purs";
+                    getStoreGlob = pkg: "''${pkg.outPath}/src/**/*.purs";
+                  in rec {
+                    inputs = spago-packages.inputs // {
+                  ${overrides}
+                    };
+                    installSpagoStyle = pkgs.writeShellScriptBin "install-spago-style" '''
+                        set -e
+                        echo installing dependencies...
+                        ''${builtins.toString (builtins.map cpPackage (builtins.attrValues inputs))}
+                        echo "echo done."
+                    ''';
+                    buildSpagoStyle = pkgs.writeShellScriptBin "build-spago-style" '''
+                        set -e
+                        echo building project...
+                        purs compile ''${builtins.toString (builtins.map getGlob (builtins.attrValues inputs))} "$@"
+                        echo done.
+                    ''';
+                    buildFromNixStore = pkgs.writeShellScriptBin "build-from-store" '''
+                        set -e
+                        echo building project using sources from nix store...
+                        purs compile ''${builtins.toString (
+                          builtins.map getStoreGlob (builtins.attrValues inputs))} "$@"
+                        echo done.
+                    ''';
+                    mkBuildProjectOutput =
+                      { src, purs }:
+                      pkgs.stdenv.mkDerivation {
+                        name = "build-project-output";
+                        src = src;
+                        buildInputs = [ purs ];
+                        installPhase = '''
+                          mkdir -p $out
+                          purs compile "$src/**/*.purs" ''${builtins.toString
+                            (builtins.map
+                              (x: '''"''${x.outPath}/src/**/*.purs"''')
+                              (builtins.attrValues inputs))}
+                          mv output $out
+                        ''';
+                      };
+                  }
                 '';
 
             project =
