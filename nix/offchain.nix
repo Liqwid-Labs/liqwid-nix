@@ -214,6 +214,24 @@ in
                 type = types.path;
               };
 
+              packageJson = lib.mkOption {
+                description = ''
+                  Path to the project's package.json file.
+
+                  Added in: 2.5.0.
+                '';
+                type = types.path;
+              };
+
+              packageLock = lib.mkOption {
+                description = ''
+                  Path to the project's package-lock.json file.
+
+                  Added in: 2.5.0.
+                '';
+                type = types.path;
+              };
+
               pkgs = lib.mkOption {
                 description = ''
                   Package set to use. If specified, you must also manually apply
@@ -561,14 +579,11 @@ in
             project =
               let
                 pkgSet = pkgs.purescriptProject {
-                  inherit (projectConfig) src;
+                  inherit (projectConfig) src packageJson packageLock;
 
                   inherit projectName pkgs;
 
                   nodejs = nodejsPackage;
-
-                  packageJson = projectConfig.src + "/package.json";
-                  packageLock = projectConfig.src + "/package-lock.json";
 
                   censorCodes = projectConfig.ignoredWarningCodes;
 
