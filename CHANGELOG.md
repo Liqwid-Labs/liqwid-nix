@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.5.0 - 2023-02-22
+
+- Exposable hoogle docker image.
+
 ## 2.4.0 - 2023-02-17
 
 - Default `exposeConfig` to `false` in offchain module
