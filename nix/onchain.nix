@@ -108,6 +108,30 @@ in
             };
           };
 
+          hoogleImage = types.submodule {
+            options = {
+              enable = lib.mkOption {
+                type = types.bool;
+                description = ''
+                  Whether or not to expose a docker image bundling the hoogle server with the packages available.
+
+                  Added in: 2.5.0.
+                '';
+                default = false;
+              };
+
+              hoogleDirectory = lib.mkOption {
+                type = types.nullOr types.path;
+                description = ''
+                  Path to copy hoogle data dir from.
+
+                  Added in: 2.5.0.
+                '';
+                default = null;
+              };
+            };
+          };
+
           project = types.submodule {
             options = {
               src = lib.mkOption {
@@ -180,6 +204,16 @@ in
                 '';
                 type = shell;
               };
+
+              hoogleImage = lib.mkOption {
+                description = ''
+                  Options for the hoogle image.
+
+                  Added in: 2.5.0.
+                '';
+                type = hoogleImage;
+              };
+
 
               enableHaskellFormatCheck = lib.mkOption {
                 type = types.bool;
@@ -490,7 +524,21 @@ in
                     '';
                 };
 
-            packages = flake.packages;
+            hoogleImage = lib.ifEnable projectConfig.hoogleImage.enable
+              {
+                hoogleImage = import ./hoogle.nix
+                  {
+                    inherit pkgs lib project;
+                    inherit (projectConfig.hoogleImage) hoogleDirectory;
+                    hoogle = assert (lib.assertMsg (self.inputs ? hoogle) '' 
+                      [liqwid-nix]: liqwid-nix onchain module is using hoogle. Please provide a 'hoogle' input.
+
+                      This input should be taken from https://github.com/ndmitchell/hoogle.
+                    ''); self.inputs.hoogle;
+                  };
+              };
+
+            packages = flake.packages // hoogleImage;
 
             checks =
               lib.fold lib.mergeAttrs { }
@@ -510,6 +558,7 @@ in
             inherit checks packages;
 
             check = utils.combineChecks "combined-checks" checks;
+
 
             run.nixFormat =
               {

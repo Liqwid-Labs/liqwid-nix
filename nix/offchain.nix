@@ -218,7 +218,7 @@ in
                 description = ''
                   Path to the project's package.json file.
 
-                  Added in: 2.5.0.
+                  Added in: 2.6.0.
                 '';
                 type = types.path;
               };
@@ -227,7 +227,7 @@ in
                 description = ''
                   Path to the project's package-lock.json file.
 
-                  Added in: 2.5.0.
+                  Added in: 2.6.0.
                 '';
                 type = types.path;
               };
