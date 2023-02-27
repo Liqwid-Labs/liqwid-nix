@@ -11,22 +11,14 @@
 , ...
 }:
 let
-  # A static exe with hoogle in it, it is static in order to save on space in the
-  # docker image.
-  #
-  # TODO(Emily, 22 Feb 2023): Can we build this using Nix? 
-  # It's actually quite hard to get ahold of this static build. This works for now
-  # but is quite unmaintainable. Using some IFD -- provided things work -- should be
-  # a valid alternative.
-  hoogle-static =
-    pkgs.runCommand
-      "hoogle-static"
-      { }
-      ''
-        mkdir -p $out/bin 
-        cp ${../data/hoogle-exe.gz} $out/bin/hoogle.gz
-        ${pkgs.gzip}/bin/gzip -d $out/bin/hoogle.gz
-      '';
+  hoogle-static = pkgs.stdenvNoCC.mkDerivation {
+    name = "hoogle-static";
+    src = pkgs.pkgsStatic.haskellPackages.hoogle;
+    installPhase = ''
+      mkdir $out
+      cp -r bin $out/bin
+    '';
+  };
   hoogle-database =
     pkgs.runCommand "hoogle-generate"
       {
