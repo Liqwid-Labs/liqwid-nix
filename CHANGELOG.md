@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.6.0 - 2023-02-27
+
+- Make `packageJson` and `packageLock` required options in offchain module. CTL docs say that "It is *highly* recommended to pass" in order to prevent unncecessary rebuilds.
+
 ## 2.5.0 - 2023-02-22
 
 - Exposable hoogle docker image.
