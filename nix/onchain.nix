@@ -261,7 +261,6 @@ in
                   Added in: 2.0.0.
                 '';
               };
-
             };
           };
         in
@@ -428,7 +427,8 @@ in
                     nativeBuildInputs = commandLineTools;
                     shellHook = ''
                       liqwid(){ c=$1; shift; nix run .#$c -- $@; }
-                    '';
+                    ''
+                    + config.pre-commit.installationScript;
                   };
 
                   inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${liqwid-nix.ghc-next-packages}";
@@ -530,7 +530,7 @@ in
                   {
                     inherit pkgs lib project;
                     inherit (projectConfig.hoogleImage) hoogleDirectory;
-                    hoogle = assert (lib.assertMsg (self.inputs ? hoogle) '' 
+                    hoogle = assert (lib.assertMsg (self.inputs ? hoogle) ''
                       [liqwid-nix]: liqwid-nix onchain module is using hoogle. Please provide a 'hoogle' input.
 
                       This input should be taken from https://github.com/ndmitchell/hoogle.
