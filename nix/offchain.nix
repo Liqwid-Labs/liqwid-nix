@@ -515,12 +515,15 @@ in
                           ''
                         )
                         projectConfig.spagoOverride));
+                spagoPackagesText =
+                  builtins.readFile "${src}/spago-packages.nix";
+                spagoPackages = builtins.toFile "spago-packages.nix" spagoPackagesText;
               in
               pkgs.writeText "fixed-spago-packages.nix"
                 ''
                   { pkgs ? import <nixpkgs> {} }:
                   let
-                    spago-packages = import ${src}/spago-packages.nix {inherit pkgs;};
+                    spago-packages = import ${spagoPackages} {inherit pkgs;};
                     cpPackage = pkg:
                       let
                         target = ".spago/''${pkg.name}/''${pkg.version}";
