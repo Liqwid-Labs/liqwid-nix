@@ -1,4 +1,4 @@
-{ config, lib, flake-parts-lib, ... }:
+{ config, self, lib, flake-parts-lib, ... }:
 let
   # Which modules do we want to expose to consumers of liqwid-nix.
   exposedModules = {
@@ -13,9 +13,12 @@ in
     flake = {
       allModules = builtins.attrValues exposedModules;
       flakeModule = {
-        imports = builtins.attrValues exposedModules;
+        imports =
+          builtins.attrValues exposedModules ++ (with self.inputs; [
+            # flake modules from other flake libraries
+            pre-commit-hooks.flakeModule
+          ]);
       };
     } // exposedModules;
   };
 }
-

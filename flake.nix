@@ -25,6 +25,8 @@
     ghc-next-packages.flake = false;
 
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=master";
+
+    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -32,6 +34,7 @@
       imports = [
         ./nix/templates.nix
         ./nix/all-modules.nix
+        inputs.pre-commit-hooks.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
       perSystem = { config, self', inputs', pkgs, lib, system, ... }:
@@ -40,11 +43,20 @@
           utils = import ./nix/utils.nix { inherit pkgs lib; };
         in
         {
+          pre-commit = {
+            settings = {
+              src = ./.;
+              hooks = {
+                nixpkgs-fmt.enable = true;
+              };
+            };
+          };
           devShells.default = pkgs.mkShell {
             name = "liqwid-nix-dev-shell";
             buildInputs = [
               pkgs.nixpkgs-fmt
             ];
+            shellHook = config.pre-commit.installationScript;
           };
           formatter = pkgs.nixpkgs-fmt;
 

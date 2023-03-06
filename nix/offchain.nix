@@ -596,7 +596,8 @@ in
                     shellHook = ''
                       liqwid(){ c=$1; shift; nix run .#$c -- $@; }
                     ''
-                    + projectConfig.shell.shellHook;
+                    + projectConfig.shell.shellHook
+                    + config.pre-commit.installationScript;
                   };
                 };
               in
