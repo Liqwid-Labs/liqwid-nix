@@ -2,6 +2,12 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.6.1 - 2023-03-08
+
+- Provide `pre-commit-hooks` flake for formatter and linker hooks. 
+  Check [cachix/pre-commit-hooks.nix](https://github.com/cachix/pre-commit-hooks.nix) 
+  to see how to configure.
+
 ## 2.6.0 - 2023-02-27
 
 - Make `packageJson` and `packageLock` required options in offchain module. CTL docs say that "It is *highly* recommended to pass" in order to prevent unncecessary rebuilds.
