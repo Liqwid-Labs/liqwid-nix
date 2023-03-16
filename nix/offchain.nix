@@ -397,71 +397,6 @@ in
           [liqwid-nix] liqwid-nix offchain module is being used. Please provide a 'nixpkgs-ctl' input, as taken from 'cardano-transaction-lib'.
         ''); self.inputs.nixpkgs-ctl;
 
-        # NOTE(Emily, 13 Jan 2023): This is currently semi-vendored from CTL. This shouldn't be necessary
-        # once we are on a more recent version that supports including the spago result in the bundle.
-        #
-        # The exact difference here is what is specified by 'includeBundledModule'. Additionally,
-        # some work has been done to ensure this can work while being outside of the context of the
-        # 'project' scope (by taking 'project' as an argument).
-        #
-        # This workaround will no longer be necessary as soon as the PR is merged and we are up to date:
-        # https://github.com/Plutonomicon/cardano-transaction-lib/pull/1396
-        #
-        # Bundles a Purescript project using Webpack, typically for the browser
-        bundlePursProject =
-          {
-            # Can be used to override the name given to the resulting derivation
-            name
-            # The Webpack `entrypoint`
-          , entrypoint ? "index.js"
-            # The main Purescript module
-          , main ? "Main"
-            # If this bundle is being produced for a browser environment or not
-          , browserRuntime ? true
-            # Path to the Webpack config to use
-          , webpackConfig ? "webpack.config.js"
-            # The name of the bundled JS module that `spago bundle-module` will produce
-          , bundledModuleName ? "output.js"
-            # Generated `node_modules` in the Nix store. Can be passed to have better
-            # control over individual project components
-          , nodeModules ? project.nodeModules
-            # If the spago bundle-module output should be included in the derivation
-          , includeBundledModule ? false
-            # The project object
-          , project
-          , pkgs
-          , ...
-          }:
-
-          pkgs.runCommand "${name}"
-            {
-              buildInputs = [
-                project.nodejs
-                nodeModules
-                project.compiled
-              ];
-              nativeBuildInputs = [
-                pkgs.easy-ps.purs-0_14_5
-                pkgs.easy-ps.spago
-              ];
-            }
-            ''
-              export HOME="$TMP"
-              export NODE_PATH="${nodeModules}/lib/node_modules"
-              export PATH="${nodeModules}/bin:$PATH"
-              ${pkgs.lib.optionalString browserRuntime "export BROWSER_RUNTIME=1"}
-              cp -r ${project.compiled}/* .
-              chmod -R +rwx .
-              spago bundle-module --no-install --no-build -m "${main}" \
-                --to ${bundledModuleName}
-              mkdir ./dist
-              ${pkgs.lib.optionalString includeBundledModule "cp ${bundledModuleName} ./dist"}
-              webpack --mode=production -c ${webpackConfig} -o ./dist \
-                --entry ./${entrypoint}
-              mkdir $out
-              mv dist $out
-            '';
-
         # ----------------------------------------------------------------------
 
         makeProject = projectName: projectConfig:
@@ -591,6 +526,7 @@ in
 
                   shell = {
                     withRuntime = true;
+                    withChromium = pkgs.stdenv.isLinux;
                     packageLockOnly = true;
                     packages = commandLineTools;
                     shellHook = ''
@@ -604,13 +540,13 @@ in
               pkgSet;
 
             bundles = (lib.mapAttrs
-              (name: bundle: bundlePursProject {
+              (name: bundle: project.bundlePursProject {
                 inherit (bundle)
                   bundledModuleName
                   webpackConfig
                   includeBundledModule
                   browserRuntime;
-                inherit name project pkgs;
+                inherit name pkgs;
 
                 main = bundle.mainModule;
                 entrypoint = bundle.entrypointJs;
