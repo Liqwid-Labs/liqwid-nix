@@ -2,6 +2,12 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.7.0 - 2023-03-16
+
+- Requires CTL v5 now.
+- Remove vendored `bundlePursProject`, since CTL supports this now.
+- Allow building on darwin by excluding chromium build.
+
 ## 2.6.1 - 2023-03-08
 
 - Provide `pre-commit-hooks` flake for formatter and linker hooks. 
