@@ -481,37 +481,43 @@ in
             flake = project.flake { };
 
             buildChecks =
-              lib.ifEnable projectConfig.enableBuildChecks (
-                pkgs-latest.lib.mapAttrs'
-                  (name: value: {
-                    name = "build:" + name;
-                    inherit value;
-                  })
-                  flake.packages
-              );
+              if projectConfig.enableBuildChecks then
+                (
+                  pkgs-latest.lib.mapAttrs'
+                    (name: value: {
+                      name = "build:" + name;
+                      inherit value;
+                    })
+                    flake.packages
+                )
+              else
+                { };
 
             haskellFormatCheck =
               let
                 extStr =
                   builtins.concatStringsSep " " (builtins.map (x: "-o -X" + x) projectConfig.ghc.extensions);
               in
-              lib.ifEnable projectConfig.enableHaskellFormatCheck {
-                haskellFormatCheck = utils.shellCheck
-                  "haskellFormatCheck"
-                  projectConfig.src
-                  {
-                    nativeBuildInputs = [ fourmolu ];
-                  }
-                  ''
-                    find -name '*.hs' \
-                      -not -path './dist*/*' \
-                      -not -path './haddock/*' \
-                        | xargs fourmolu ${extStr} -m check
-                  '';
-              };
+              if projectConfig.enableHaskellFormatCheck then
+                {
+                  haskellFormatCheck = utils.shellCheck
+                    "haskellFormatCheck"
+                    projectConfig.src
+                    {
+                      nativeBuildInputs = [ fourmolu ];
+                    }
+                    ''
+                      find -name '*.hs' \
+                        -not -path './dist*/*' \
+                        -not -path './haddock/*' \
+                          | xargs fourmolu ${extStr} -m check
+                    '';
+                }
+              else
+                { };
 
             cabalFormatCheck =
-              lib.ifEnable projectConfig.enableCabalFormatCheck
+              if projectConfig.enableCabalFormatCheck then
                 {
                   cabalFormatCheck = utils.shellCheck
                     "cabalFormatCheck"
@@ -522,21 +528,26 @@ in
                     ''
                       find -name '*.cabal' -not -path './dist*/*' -not -path './haddock/*' | xargs cabal-fmt -c
                     '';
-                };
+                }
+              else
+                { };
 
-            hoogleImage = lib.ifEnable projectConfig.hoogleImage.enable
-              {
-                hoogleImage = import ./hoogle.nix
-                  {
-                    inherit pkgs lib project;
-                    inherit (projectConfig.hoogleImage) hoogleDirectory;
-                    hoogle = assert (lib.assertMsg (self.inputs ? hoogle) ''
-                      [liqwid-nix]: liqwid-nix onchain module is using hoogle. Please provide a 'hoogle' input.
+            hoogleImage =
+              if projectConfig.hoogleImage.enable then
+                {
+                  hoogleImage = import ./hoogle.nix
+                    {
+                      inherit pkgs lib project;
+                      inherit (projectConfig.hoogleImage) hoogleDirectory;
+                      hoogle = assert (lib.assertMsg (self.inputs ? hoogle) ''
+                        [liqwid-nix]: liqwid-nix onchain module is using hoogle. Please provide a 'hoogle' input.
 
-                      This input should be taken from https://github.com/ndmitchell/hoogle.
-                    ''); self.inputs.hoogle;
-                  };
-              };
+                        This input should be taken from https://github.com/ndmitchell/hoogle.
+                      ''); self.inputs.hoogle;
+                    };
+                }
+              else
+                { };
 
             packages = flake.packages // hoogleImage;
 
@@ -666,9 +677,9 @@ in
 
         run = projectScripts;
 
-        checks = (projectChecks // (lib.ifEnable moduleUsed {
+        checks = (projectChecks // (if moduleUsed then {
           all_onchain = utils.combineChecks "all_onchain" projectChecks;
-        }));
+        } else { }));
       };
   };
 }

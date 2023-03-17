@@ -81,17 +81,20 @@ in
       in
       {
         checks.required = combinedChecks;
-        run = lib.ifEnable config.ci.addRunScript
-          {
-            ci = {
-              script = ''
-                nix build .#checks.${system}.required
-              '';
-              help = ''
-                echo "  Simply runs the \`required\` check for the given system.'"
-              '';
-            };
-          };
+        run =
+          if config.ci.addRunScript then
+            {
+              ci = {
+                script = ''
+                  nix build .#checks.${system}.required
+                '';
+                help = ''
+                  echo "  Simply runs the \`required\` check for the given system.'"
+                '';
+              };
+            }
+          else
+            { };
       };
   };
 }

@@ -2,6 +2,12 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.7.1 - 2023-03-17
+
+- Remove uses of `ifEnable`.
+- When plutip or purescript tests are null, liqwid-nix no longer throws an error,
+  but ignores them silently.
+
 ## 2.7.0 - 2023-03-16
 
 - Requires CTL v5 now.

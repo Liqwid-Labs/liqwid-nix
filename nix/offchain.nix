@@ -564,21 +564,22 @@ in
                   projectConfig.bundles);
 
 
-            purescriptCheck = lib.ifEnable
-              (projectConfig ? tests)
-              {
-                tests =
-                  (project.runPursTest {
-                    inherit (projectConfig.tests)
-                      sources
-                      buildInputs
-                      testMain;
-                  });
-              };
+            purescriptCheck =
+              if (projectConfig ? tests && projectConfig.tests != null) then
+                {
+                  tests =
+                    (project.runPursTest {
+                      inherit (projectConfig.tests)
+                        sources
+                        buildInputs
+                        testMain;
+                    });
+                }
+              else
+                { };
 
             plutipCheck =
-              lib.ifEnable
-                (projectConfig ? plutip)
+              if (projectConfig ? plutip && projectConfig.plutip != null) then
                 {
                   plutip-tests =
                     (project.runPlutipTest {
@@ -587,11 +588,12 @@ in
                         buildInputs
                         testMain;
                     });
-                };
+                }
+              else
+                { };
 
             formattingCheck =
-              lib.ifEnable
-                projectConfig.enableFormatCheck
+              if projectConfig.enableFormatCheck then
                 {
                   formatting-check =
                     (pkgs.runCommand "formatting-check"
@@ -605,11 +607,12 @@ in
                         prettier -c $(fd -ejs)
                         touch $out
                       '');
-                };
+                }
+              else
+                { };
 
             jsLintCheck =
-              lib.ifEnable
-                projectConfig.enableJsLintCheck
+              if projectConfig.enableJsLintCheck then
                 {
                   js-lint-check = (pkgs.runCommand "js-lint-check"
                     {
@@ -620,7 +623,9 @@ in
                       eslint $(fd -ejs)
                       touch $out
                     '');
-                };
+                }
+              else
+                { };
 
             checks = lib.fold lib.mergeAttrs { } [
               bundleChecks
@@ -729,9 +734,9 @@ in
               (_: project: project.apps)
               projects);
 
-        checks = projectChecks // (lib.ifEnable moduleUsed {
+        checks = projectChecks // (if moduleUsed then {
           all_offchain = utils.combineChecks "all_offchain" projectChecks;
-        });
+        } else { });
 
         devShells = lib.mapAttrs (_: project: project.devShell) projects;
       };
