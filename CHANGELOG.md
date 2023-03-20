@@ -6,11 +6,13 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
 - Update templates.
 - Deprecate ctl-server.
+- Add `submodules` option to offchain that addes path for npm submodules
 
 ## 2.9.2 - 2023-06-14
 
 - Add liqwid-nix module documentation generation. Both onchain and offchain have their modules included.
   Pending implementation for automating this workstream.
+
 
 ## 2.9.1 - 2023-05-26
 
