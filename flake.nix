@@ -29,7 +29,7 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   };
 
-  outputs = inputs@{ flake-parts, ... }:
+  outputs = inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./nix/templates.nix
@@ -66,18 +66,10 @@
               find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt
             '';
         };
-      flake = { self, ... }: {
-        config.hydraJobs = {
-          packages = self.packages.x86_64-linux;
-          checks = self.checks.x86_64-linux;
-          devShells = self.devShells.x86_64-linux;
-        };
-        config.herculesCI = { ... }: {
-          onPush.default = {
-            outputs = { ... }:
-              self.checks.x86_64-linux;
-          };
+      flake = { ... }: {
+        config.herculesCI = {
           ciSystems = [ "x86_64-linux" ];
+          onPush.default.outputs = self.checks.x86_64-linux;
         };
       };
     };
