@@ -67,6 +67,12 @@ in
       );
   };
   config = {
+    flake = { ... }: {
+      config.herculesCI = {
+        ciSystems = [ "x86_64-linux" ];
+        onPush.default.outputs = self.checks.x86_64-linux;
+      };
+    };
     perSystem = { config, self', inputs', pkgs, system, ... }:
       let
         pkgs = import self.inputs.nixpkgs {
