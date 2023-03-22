@@ -5,7 +5,7 @@ let
     onchain = ./onchain.nix;
     offchain = ./offchain.nix;
     run = ./run.nix;
-    ci = ./ci.nix;
+    ci = ./ci-config.nix;
   };
 in
 {

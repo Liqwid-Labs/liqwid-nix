@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.7.2 - 2023-03-22
+
+- Enable Hercules CI support.
+
 ## 2.7.1 - 2023-03-17
 
 - Remove uses of `ifEnable`.
