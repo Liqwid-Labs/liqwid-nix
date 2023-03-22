@@ -71,6 +71,7 @@ in
       config.herculesCI = {
         ciSystems = [ "x86_64-linux" ];
         onPush.default.outputs = self.checks.x86_64-linux;
+        onPush.required.outputs = self.checks.x86_64-linux.required;
       };
     };
     perSystem = { config, self', inputs', pkgs, system, ... }:
