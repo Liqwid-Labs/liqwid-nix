@@ -150,6 +150,14 @@ in
                 '';
                 type = ghc;
               };
+              
+              inputMap = lib.mkOption {
+                description = ''
+                  haskell.nix's inputMap
+                '';
+                type = with types; attrsOf str;
+                default = { };
+              };
 
               fourmolu = lib.mkOption {
                 description = ''
@@ -262,6 +270,7 @@ in
                 '';
               };
             };
+            config.inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${self.inputs.liqwid-nix.inputs.liqwid-nix.ghc-next-packages}";
           };
         in
         {
@@ -415,7 +424,7 @@ in
               let
                 hackages = customHackages;
                 pkgSet = haskell-nix.cabalProject' {
-                  inherit (projectConfig) src;
+                  inherit (projectConfig) src inputMap;
                   compiler-nix-name = projectConfig.ghc.version;
                   shell = {
                     withHoogle = true;
@@ -431,7 +440,6 @@ in
                     + config.pre-commit.installationScript;
                   };
 
-                  inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${liqwid-nix.ghc-next-packages}";
 
                   modules = haskellModules ++ hackages.modules;
                   extra-hackages = hackages.extra-hackages;
