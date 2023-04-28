@@ -232,6 +232,14 @@ in
                 type = types.path;
               };
 
+              strictComp = lib.mkOption {
+                description = ''
+                  Whether to compile the PureScript source with `--strict`    
+                '';
+                type = types.bool;
+                default = true;
+              };
+
               pkgs = lib.mkOption {
                 description = ''
                   Package set to use. If specified, you must also manually apply
@@ -514,7 +522,7 @@ in
             project =
               let
                 pkgSet = pkgs.purescriptProject {
-                  inherit (projectConfig) src packageJson packageLock;
+                  inherit (projectConfig) src packageJson packageLock strictComp;
 
                   inherit projectName pkgs;
 
