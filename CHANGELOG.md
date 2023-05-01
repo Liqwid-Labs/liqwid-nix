@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.8.0
+
+- Added `compileStrict` option in offchain module.
+
 ## 2.7.2 - 2023-03-22
 
 - Enable Hercules CI support.
