@@ -234,7 +234,9 @@ in
 
               strictComp = lib.mkOption {
                 description = ''
-                  Whether to compile the PureScript source with `--strict`    
+                  Whether to compile the PureScript source with `--strict`
+                  
+                  Added in: 2.8.0.
                 '';
                 type = types.bool;
                 default = true;
