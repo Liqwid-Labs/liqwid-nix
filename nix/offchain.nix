@@ -232,7 +232,7 @@ in
                 type = types.path;
               };
 
-              strictComp = lib.mkOption {
+              compileStrict = lib.mkOption {
                 description = ''
                   Whether to compile the PureScript source with `--strict`
                   
@@ -524,7 +524,7 @@ in
             project =
               let
                 pkgSet = pkgs.purescriptProject {
-                  inherit (projectConfig) src packageJson packageLock strictComp;
+                  inherit (projectConfig) src packageJson packageLock;
 
                   inherit projectName pkgs;
 
@@ -533,6 +533,8 @@ in
                   censorCodes = projectConfig.ignoredWarningCodes;
 
                   spagoPackages = fixedSpagoPackages;
+
+                  strictComp = projectConfig.compileStrict;
 
                   shell = {
                     withRuntime = true;
