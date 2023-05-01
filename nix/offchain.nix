@@ -232,6 +232,16 @@ in
                 type = types.path;
               };
 
+              compileStrict = lib.mkOption {
+                description = ''
+                  Whether to compile the PureScript source with `--strict`
+                  
+                  Added in: 2.8.0.
+                '';
+                type = types.bool;
+                default = true;
+              };
+
               pkgs = lib.mkOption {
                 description = ''
                   Package set to use. If specified, you must also manually apply
@@ -523,6 +533,8 @@ in
                   censorCodes = projectConfig.ignoredWarningCodes;
 
                   spagoPackages = fixedSpagoPackages;
+
+                  strictComp = projectConfig.compileStrict;
 
                   shell = {
                     withRuntime = true;
