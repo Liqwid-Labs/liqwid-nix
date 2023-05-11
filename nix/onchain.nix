@@ -433,7 +433,7 @@ in
 
                   inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${liqwid-nix.ghc-next-packages}";
 
-                  modules = haskellModules ++ hackages.modules;
+                  modules = hackages.modules ++ haskellModules;
                   extra-hackages = hackages.extra-hackages;
                   extra-hackage-tarballs = hackages.extra-hackage-tarballs;
                   cabalProjectLocal =
