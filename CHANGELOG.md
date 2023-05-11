@@ -2,10 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
-## 2.8.1
+## 2.9.0
 
--- Modified the onchain module to take any modules given 
-   on `extraHackageDeps` over that given on upstream hackage.
+- Modified the onchain module to take any modules given 
+  on `extraHackageDeps` over that given on upstream hackage.
 
 ## 2.8.0
 
