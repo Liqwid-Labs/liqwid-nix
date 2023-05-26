@@ -27,6 +27,8 @@
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=master";
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+
+    hercules-ci-effects.url = "github:hercules-ci/hercules-ci-effects";
   };
 
   outputs = inputs@{ self, flake-parts, ... }:
@@ -34,6 +36,7 @@
       imports = [
         ./nix/templates.nix
         ./nix/all-modules.nix
+        inputs.hercules-ci-effects.flakeModule
         inputs.pre-commit-hooks.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
@@ -66,11 +69,9 @@
               find -name '*.nix' -not -path './dist*/*' -not -path './haddock/*' | xargs nixpkgs-fmt
             '';
         };
-      flake = { ... }: {
-        config.herculesCI = {
-          ciSystems = [ "x86_64-linux" ];
-          onPush.default.outputs = self.checks.x86_64-linux;
-        };
+      herculesCI = {
+        ciSystems = [ "x86_64-linux" ];
+        onPush.default.outputs = self.checks.x86_64-linux;
       };
     };
 }
