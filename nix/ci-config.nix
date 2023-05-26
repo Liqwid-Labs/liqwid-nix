@@ -70,8 +70,11 @@ in
     # NOTE(Emily, 22 Mar 2023): Here we provide sensible defaults for working with liqwid-nix. 
     # These can be overwritten by the user, though. In the future, we may want some out-of-the-
     # -box implementation for enabling this somehow.
+    #
+    # Added in: 2.7.2.
+    # Changes in 2.9.1: use the hercules-ci-effects instead of modifying the flake output
+    # directly.
     herculesCI = {
-      # Added in: 2.7.2.
       ciSystems = [ "x86_64-linux" ];
       onPush.default.outputs = self.checks.x86_64-linux;
       onPush.required.outputs = self.checks.x86_64-linux.required;
