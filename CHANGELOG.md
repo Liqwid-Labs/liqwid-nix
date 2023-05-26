@@ -2,6 +2,11 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## 2.9.1 - 2023-05-26
+
+- Hercules CI option is moved from `flake` to top level, by using hercules-ci-effects module.
+  Downstream users of liqwid-nix can as a result now configure options without conflicting with defaults.
+
 ## 2.9.0
 
 - Modified the onchain module to take any modules given 

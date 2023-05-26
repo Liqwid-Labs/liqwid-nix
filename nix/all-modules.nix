@@ -14,10 +14,11 @@ in
       allModules = builtins.attrValues exposedModules;
       flakeModule = {
         imports =
-          builtins.attrValues exposedModules ++ (with self.inputs; [
+          builtins.attrValues exposedModules ++ [
             # flake modules from other flake libraries
-            pre-commit-hooks.flakeModule
-          ]);
+            self.inputs.hercules-ci-effects.flakeModule
+            self.inputs.pre-commit-hooks.flakeModule
+          ];
       };
     } // exposedModules;
   };
