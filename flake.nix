@@ -76,6 +76,16 @@
           };
           formatter = pkgs.nixpkgs-fmt;
           packages.options-doc = (pkgs.nixosOptionsDoc { inherit (doc-modules) options; }).optionsCommonMark;
+          packages.publish-docs = pkgs.writeScript "publish-docs.sh" ''
+            rev=$(git rev-parse --short HEAD)
+            cat ${self.packages.${system}.options-doc} > ./docs/reference/modules.md
+            rm -rf book
+            ${pkgs.mdbook}/bin/mdbook build
+            touch book/.nojekyll
+            git fetch origin
+            git checkout gh-pages
+            GIT_WORK_TREE=$(pwd)/book git add -A
+          '';
 
           # This check is for `liqwid-nix` itself.
           checks.nixFormat =
