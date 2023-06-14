@@ -348,14 +348,8 @@ in
                 default = false;
               };
 
-              nodejsPackage = lib.mkOption {
-                description = ''
-                  The nodejs package to use.
-
-                  Added in: 2.1.1.
-                '';
-                type = types.package;
-                default = pkgs.nodejs-14_x;
+              nodejsPackage = lib.mkPackageOption pkgs "nodejs" {
+                default = [ "nodejs-14_x" ];
               };
             };
           };
