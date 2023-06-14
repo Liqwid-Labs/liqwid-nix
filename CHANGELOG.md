@@ -2,6 +2,10 @@
 
 This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
+## Unreleased
+
+- Update templates.
+
 ## 2.9.2 - 2023-06-14
 
 - Add liqwid-nix module documentation generation. Both onchain and offchain have their modules included.
