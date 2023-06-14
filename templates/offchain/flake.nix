@@ -32,11 +32,27 @@
           };
         in
         {
+          pre-commit = {
+            settings = {
+              src = ./.;
+              excludes = [ "spago-packages.nix" ];
+              hooks = {
+                nixpkgs-fmt.enable = true;
+                purs-tidy.enable = true;
+                dhall-format.enable = true;
+              };
+            };
+          };
           offchain.default = {
             src = ./.;
+            packageJson = ./package.json;
+            packageLock = ./package-lock.json;
+
+            submodules = [ ];
 
             runtime = {
               enableCtlServer = false;
+              exposeConfig = false;
             };
 
             bundles = {
@@ -52,7 +68,7 @@
 
             shell = { };
             enableFormatCheck = true;
-            enableJsLintCheck = true;
+            enableJsLintCheck = false;
 
             plutip = {
               buildInputs = [ ];
@@ -63,6 +79,10 @@
               testMain = "Test.Main";
             };
           };
+
+          ci.required = [ "all_offchain" ];
+
+          apps = inputs.cardano-transaction-lib.inputs.cardano-node.apps;
         };
     };
 }
