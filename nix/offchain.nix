@@ -313,6 +313,16 @@ in
                 default = { };
               };
 
+              submodules = lib.mkOption {
+                description = ''
+                  NPM submodules directories to include when making Node Env
+
+                  Added in: 2.8.0
+                '';
+                type = types.listOf types.path;
+                default = [ ];
+              };
+
               enableFormatCheck = lib.mkOption {
                 description = ''
                   Whether to add a flake check verifying that the code
@@ -507,6 +517,8 @@ in
                   spagoPackages = fixedSpagoPackages;
 
                   strictComp = projectConfig.compileStrict;
+
+                  submodules = projectConfig.submodules;
 
                   shell = {
                     withRuntime = true;
