@@ -5,6 +5,7 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 ## Unreleased
 
 - Update templates.
+- Deprecate ctl-server.
 
 ## 2.9.2 - 2023-06-14
 
