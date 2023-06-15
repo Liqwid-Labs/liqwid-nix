@@ -149,18 +149,6 @@ in
 
           runtime = types.submodule {
             options = {
-              enableCtlServer = lib.mkOption {
-                description = ''
-                  Whether to enable or disable the CTL server (used to apply
-                  arguments to scripts and evaluate UPLC). Enabling this will
-                  also add the ctl-server overlay.
-
-                  Added in: 2.1.0.
-                '';
-                type = types.bool;
-                default = false;
-              };
-
               extraConfig = lib.mkOption {
                 description = ''
                   Additional config options to pass to the CTL runtime. See
@@ -387,16 +375,6 @@ in
           spago
         ];
 
-        includeCtlServer =
-          lib.any
-            (project: project.runtime.enableCtlServer)
-            (lib.attrValues projectConfigs);
-
-        additionalOverlays =
-          if includeCtlServer
-          then [ ctl-overlays.ctl-server ]
-          else [ ];
-
         nixpkgs-ctl = assert (lib.assertMsg (self.inputs ? nixpkgs-ctl) ''
           [liqwid-nix] liqwid-nix offchain module is being used. Please provide a 'nixpkgs-ctl' input, as taken from 'cardano-transaction-lib'.
         ''); self.inputs.nixpkgs-ctl;
@@ -410,7 +388,7 @@ in
               if projectConfig.pkgs == null then
                 (import nixpkgs-ctl {
                   inherit system;
-                  overlays = defaultCtlOverlays ++ additionalOverlays;
+                  overlays = defaultCtlOverlays;
                 })
               else projectConfig.pkgs;
 
@@ -644,16 +622,9 @@ in
               formattingCheck
               jsLintCheck
             ];
-
-            ctlRuntimeConfig = projectConfig.runtime.extraConfig // {
-              ctlServer.enable = projectConfig.runtime.enableCtlServer;
-            };
           in
           {
-            packages = bundles //
-              (if projectConfig.runtime.exposeConfig
-              then { ctl-runtime = pkgs.buildCtlRuntime ctlRuntimeConfig { }; }
-              else { });
+            packages = bundles;
 
             run.nixFormat =
               {
@@ -699,7 +670,6 @@ in
             check = utils.combineChecks "combined-checks" checks;
 
             apps = {
-              ctl-runtime = pkgs.launchCtlRuntime ctlRuntimeConfig;
               docs = project.launchSearchablePursDocs { };
             };
 
