@@ -17,12 +17,12 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     # On-chain deps
-    haskell-nix.url = "github:input-output-hk/haskell.nix?rev=cbf1e918b6e278a81c385155605b8504e498efef";
-    iohk-nix.url = "github:input-output-hk/iohk-nix?rev=4848df60660e21fbb3fe157d996a8bac0a9cf2d6";
-    iohk-nix.flake = false;
+    haskell-nix.url = "github:input-output-hk/haskell.nix";
+    iohk-nix.url = "github:input-output-hk/iohk-nix";
+    iohk-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    ghc-next-packages.url = "github:input-output-hk/ghc-next-packages?ref=repo";
-    ghc-next-packages.flake = false;
+    CHaP.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+    CHaP.flake = false;
 
     plutarch.url = "github:Plutonomicon/plutarch-plutus?ref=master";
 
@@ -54,7 +54,7 @@
                 ./nix/run.nix
                 ./nix/offchain.nix
                 # FIXME: This module doesn't seem to work yet.
-                # ./nix/ci-config.nix 
+                # ./nix/ci-config.nix
               ];
             });
         in

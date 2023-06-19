@@ -57,7 +57,7 @@ in
           fourmolu = types.submodule {
             options = {
               package = lib.mkPackageOption pkgs "fourmolu" {
-                default = [ "haskell" "packages" "ghc924" "fourmolu_0_9_0_0" ];
+                default = [ "haskell" "packages" "ghc924" "fourmolu_0_12_0_0" ];
               };
             };
           };
@@ -65,7 +65,7 @@ in
           applyRefact = types.submodule {
             options = {
               package = lib.mkPackageOption pkgs "apply-refact" {
-                default = [ "haskell" "packages" "ghc924" "apply-refact_0_10_0_0" ];
+                default = [ "haskell" "packages" "ghc924" "apply-refact" ];
               };
             };
           };
@@ -281,8 +281,8 @@ in
           inherit system;
           overlays =
             [
+              liqwid-nix.iohk-nix.overlays.crypto
               liqwid-nix.haskell-nix.overlay
-              (import "${liqwid-nix.iohk-nix}/overlays/crypto")
             ];
         };
 
@@ -431,15 +431,18 @@ in
                     + config.pre-commit.installationScript;
                   };
 
-                  inputMap."https://input-output-hk.github.io/ghc-next-packages" = "${liqwid-nix.ghc-next-packages}";
+                  inputMap = {
+                    "https://input-output-hk.github.io/cardano-haskell-packages" =
+                      liqwid-nix.CHaP;
+                  };
 
                   modules = hackages.modules ++ haskellModules;
                   extra-hackages = hackages.extra-hackages;
                   extra-hackage-tarballs = hackages.extra-hackage-tarballs;
                   cabalProjectLocal =
                     ''
-                      repository ghc-next-packages
-                        url: https://input-output-hk.github.io/ghc-next-packages
+                      repository cardano-haskell-packages
+                        url: https://input-output-hk.github.io/cardano-haskell-packages
                         secure: True
                         root-keys:
                         key-threshold: 0
@@ -460,7 +463,7 @@ in
                         monoidal-containers:aeson,
                         size-based:template-haskell,
                         snap-server:attoparsec,
-                      --  tasty-hedgehog:hedgehog,
+                        tasty-hedgehog:hedgehog,
                         *:hashable,
                         *:text
 
