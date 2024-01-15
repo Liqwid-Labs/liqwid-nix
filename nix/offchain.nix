@@ -502,11 +502,7 @@ in
 
                   nodejs = nodejsPackage;
 
-                  censorCodes = projectConfig.ignoredWarningCodes;
-
                   spagoPackages = fixedSpagoPackages;
-
-                  strictComp = projectConfig.compileStrict;
 
                   shell = {
                     withRuntime = true;
@@ -523,6 +519,11 @@ in
               in
               pkgSet;
 
+            builtProject = lib.makeOverridable project.buildPursProject {
+              strictComp = projectConfig.compileStrict;
+              censorCodes = projectConfig.ignoredWarningCodes;
+            };
+
             bundles = (lib.mapAttrs
               (name: bundle: project.bundlePursProject {
                 inherit (bundle)
@@ -534,6 +535,10 @@ in
 
                 main = bundle.mainModule;
                 entrypoint = bundle.entrypointJs;
+
+                builtProject = builtProject.override {
+                  main = bundle.mainModule;
+                };
               })
               projectConfig.bundles);
 
@@ -557,6 +562,7 @@ in
                         sources
                         buildInputs
                         testMain;
+                      inherit builtProject;
                     });
                 }
               else
@@ -571,6 +577,7 @@ in
                         sources
                         buildInputs
                         testMain;
+                      inherit builtProject;
                     });
                 }
               else
@@ -670,7 +677,9 @@ in
             check = utils.combineChecks "combined-checks" checks;
 
             apps = {
-              docs = project.launchSearchablePursDocs { };
+	      # TODO uncomment if re-implemented upstream
+	      # https://github.com/Plutonomicon/cardano-transaction-lib/issues/1578
+              # docs = project.launchSearchablePursDocs { };
             };
 
             devShell = project.devShell;
