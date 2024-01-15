@@ -677,7 +677,9 @@ in
             check = utils.combineChecks "combined-checks" checks;
 
             apps = {
-              docs = project.launchSearchablePursDocs { };
+	      # TODO uncomment if re-implemented upstream
+	      # https://github.com/Plutonomicon/cardano-transaction-lib/issues/1578
+              # docs = project.launchSearchablePursDocs { };
             };
 
             devShell = project.devShell;
